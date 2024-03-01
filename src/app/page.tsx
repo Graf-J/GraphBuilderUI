@@ -7,7 +7,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { Button } from '@nextui-org/button';
 
 export default function Home() {
-  const description = "Introducing Graphify - a piece of software empowering users to craft projects in order to obtain access to a personalized and typesafe language to query data from graph databases via GraphQL"
+  const description = "Introducing Graphify - A piece of software empowering users to craft projects in order to obtain access to a personalized and typesafe language to query data from graph databases via GraphQL"
 
   return (
     <div className="min-h-screen w-full bg-neutral-950 relative flex flex-col items-center justify-center antialiased">
