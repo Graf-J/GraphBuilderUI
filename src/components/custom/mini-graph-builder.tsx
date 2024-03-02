@@ -1,11 +1,11 @@
 import { useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
 import { CollectionReturnValue, Core, SingularElementReturnValue } from 'cytoscape';
-import { Graph } from '@/models/graph-model';
+import { GraphResponse } from '@/models/response/graph-response-model';
 import { parseGraphToElements } from '@/utils/graph-parser';
 
 
-export default function MiniGraphBuilder({ graph }: { graph: Graph }) {
+export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
     const cyRef = useRef<Core | null>(null)
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -75,6 +75,10 @@ export default function MiniGraphBuilder({ graph }: { graph: Graph }) {
             cyRef.current.ready(() => {
                 applyStyles()
             });
+        }
+
+        return () => {
+            cyRef.current!.removeAllListeners()
         }
     }, [applyStyles, layout])
 

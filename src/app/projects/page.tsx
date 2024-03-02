@@ -1,7 +1,7 @@
 import ProjectCard from '@/components/custom/project-card';
-import { Project } from '@/models/project-model';
+import { ProjectResponse } from '@/models/response/project-response-model';
 
-async function getData(): Promise<Project[]> {
+async function getData(): Promise<ProjectResponse[]> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/projects`, { cache: 'no-store' })
     
     if (!res.ok) {
@@ -16,7 +16,7 @@ export default async function Page() {
 
     return(
         <div className="flex flex-wrap h-screen bg-gray-200 dark:bg-gray-800 overflow-auto">
-            { projects.map((project: Project) => (
+            { projects.map((project: ProjectResponse) => (
                 <ProjectCard key={project.id}  project={project}/>
             ))}
         </div>

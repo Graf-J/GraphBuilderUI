@@ -24,9 +24,11 @@ export default function Home() {
         transition={{ delay: 5, duration: 0.5 }}
         className="w-full max-w-4xl mx-auto p-4 flex justify-center mt-2"
       >
+        <Link href="/projects">
           <Button className="z-10" color="primary" size="lg">
-            <Link href="/projects">Build Project</Link>
+            Build Project
           </Button>
+        </Link>
       </motion.div>
       </div>
       <BackgroundBeams />

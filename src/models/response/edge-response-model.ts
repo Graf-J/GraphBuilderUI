@@ -1,6 +1,6 @@
-import { Property } from './property-model';
+import { Property } from '../property-model';
 
-export interface Edge {
+export interface EdgeResponse {
     id: string;
     name: string;
     properties: Property[];
