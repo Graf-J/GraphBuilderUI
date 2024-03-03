@@ -43,7 +43,7 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
                     'arrow-scale': 2,
                     'text-background-opacity': 0.85,
                     'curve-style': 'bezier',
-                    'control-point-step-size': 75,
+                    'control-point-step-size': 150,
                     'color': isDarkMode ? 'white' : 'black',
                     'text-background-color': isDarkMode ? '#111' : '#ddd',
                     'line-color': isDarkMode ? 'white' : 'black',

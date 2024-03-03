@@ -33,7 +33,12 @@ export function parseEdgeToElement(edge: EdgeResponse) {
       id: edge.id,
       label: edge.name,
       multiEdge: edge.multi_edge,
-      properties: edge.properties,
+      properties: edge.properties.map((property) => ({
+        id: uuidv4(),
+        key: property.key,
+        required: property.required,
+        datatype: property.datatype
+      })),
       source: edge.source_vertex_id,
       target: edge.target_vertex_id,
     },

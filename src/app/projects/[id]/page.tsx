@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@nextui-org/react";
 import GraphBuilder from '@/components/custom/graph-builder';
 import Sidebar from './sidebar';
@@ -8,6 +8,7 @@ import { VertexRequest } from '@/models/request/vertex-request-model';
 import { EdgeRequest } from '@/models/request/edge-request-model';
 import { VertexResponse } from '@/models/response/vertex-response-model';
 import { GraphResponse } from '@/models/response/graph-response-model';
+import { EdgeResponse } from '@/models/response/edge-response-model';
 
 export default function Page({ params }: { params: { id: string } }) {
     const [graph, setGraph] = useState<GraphResponse | null>(null);
@@ -30,6 +31,68 @@ export default function Page({ params }: { params: { id: string } }) {
 
     const handleTabClick = (key: string) => {
         setSelectedTab(key);
+    }
+
+    const handleCreateEdge = (edge: EdgeResponse) => {
+        if (graph) {
+            setGraph((prevGraph) => {
+              if (prevGraph) {
+                return {
+                  ...prevGraph,
+                  edges: [...prevGraph.edges, edge],
+                };
+              }
+              return null;
+            });
+        }
+    }
+
+    const handleUpdateEdge = (updatedEdge: EdgeResponse) => {
+        if (graph) {
+            setGraph((prevGraph) => {
+                if (prevGraph) {
+                    // Find the index of the edge to be updated
+                    const edgeIndex = prevGraph.edges.findIndex(
+                        (edge) => edge.id === updatedEdge.id
+                    );
+    
+                    if (edgeIndex !== -1) {
+                        // Create a new array with the updated edge
+                        const updatedEdges = [...prevGraph.edges];
+                        updatedEdges[edgeIndex] = {
+                            ...updatedEdges[edgeIndex],
+                            ...updatedEdge,
+                        };
+    
+                        return {
+                            ...prevGraph,
+                            edges: updatedEdges,
+                        };
+                    }
+                }
+                return null;
+            });
+        }
+    }
+
+    const handleDeleteEdge = (edgeId: string) => {
+        if (graph) {
+            setGraph((prevGraph) => {
+              if (prevGraph) {
+                // Remove Vertex from Graph
+                const updatedEdges = prevGraph.edges.filter(
+                  (edge) => edge.id !== edgeId
+                );
+        
+                return {
+                  ...prevGraph,
+                  edges: updatedEdges,
+                };
+              }
+              return null;
+            });
+            setSelectedEdge(null);
+        }
     }
 
     const handleCreateVertex = (vertex: VertexResponse) => {
@@ -128,7 +191,7 @@ export default function Page({ params }: { params: { id: string } }) {
         setSelectedTab('vertex')
     }
 
-    const onEdgeSelect = (edge: EdgeRequest) => {
+    const onEdgeSelect = (edge: any) => {
         setSelectedEdge(edge);
         setSelectedTab('edge')
     }
@@ -145,8 +208,10 @@ export default function Page({ params }: { params: { id: string } }) {
             style={{ width: 500 }}
         >
             <div className="flex-1 p-2">
+                { graph &&
                 <Sidebar 
                     projectId={params.id}
+                    vertices={graph.vertices}
                     graphCenter={graphCenter}
                     selectedVertex={selectedVertex}
                     selectedEdge={selectedEdge}
@@ -155,7 +220,10 @@ export default function Page({ params }: { params: { id: string } }) {
                     handleCreateVertex={handleCreateVertex}
                     handleUpdateVertex={handleUpdateVertex}
                     handleDeleteVertex={handleDeleteVertex}
-                />
+                    handleCreateEdge={handleCreateEdge}
+                    handleUpdateEdge={handleUpdateEdge}
+                    handleDeleteEdge={handleDeleteEdge}
+                /> }
             </div>
         </div>
         <div className="flex-1 flex flex-col rounded-tr-lg rounded-br-lg">

@@ -1,8 +1,9 @@
 import { Property } from "@/models/property-model";
-import { VertexHttpResponse } from "@/models/http/vertex-http-response";
+import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
+import { VertexResponse } from "@/models/response/vertex-response-model";
 
-export function addVertex(projectId: string, name: string, radius: number, properties: Property[], position_x: number, position_y: number): Promise<VertexHttpResponse> {
+export function addVertex(projectId: string, name: string, radius: number, properties: Property[], position_x: number, position_y: number): Promise<HttpResponse<VertexResponse>> {
     const newVertex = {
         name,
         properties,
@@ -27,7 +28,7 @@ export function addVertex(projectId: string, name: string, radius: number, prope
                             generalErrorMessage: error.detail[0].msg,
                             fieldErrors: null,
                             response: null
-                        } as VertexHttpResponse;
+                        } as HttpResponse<VertexResponse>;
                     });
                 } else if (response.status === 422) {
                     return response.json().then(error => {
@@ -37,7 +38,7 @@ export function addVertex(projectId: string, name: string, radius: number, prope
                                 generalErrorMessage: error.detail[0].msg,
                                 fieldErrors: null,
                                 response: null
-                            } as VertexHttpResponse;
+                            } as HttpResponse<VertexResponse>;
                         }
                         return {
                             type: HttpResponseType.FIELD_ERROR,
@@ -48,7 +49,7 @@ export function addVertex(projectId: string, name: string, radius: number, prope
                                 message: detail.msg
                             })),
                             response: null
-                        } as VertexHttpResponse;
+                        } as HttpResponse<VertexResponse>;
                     })
                 }
             }
@@ -59,7 +60,7 @@ export function addVertex(projectId: string, name: string, radius: number, prope
                     generalErrorMessage: null,
                     fieldErrors: null,
                     response: data
-                } as VertexHttpResponse;
+                } as HttpResponse<VertexResponse>;
             });
         })
         .then(data => {
@@ -96,7 +97,7 @@ export function updateVertex(projectId: string, vertexId: string, name: string, 
                             generalErrorMessage: error.detail[0].msg,
                             fieldErrors: null,
                             response: null
-                        } as VertexHttpResponse;
+                        } as HttpResponse<VertexResponse>;
                     });
                 } else if (response.status === 422) {
                     return response.json().then(error => {
@@ -106,7 +107,7 @@ export function updateVertex(projectId: string, vertexId: string, name: string, 
                                 generalErrorMessage: error.detail[0].msg,
                                 fieldErrors: null,
                                 response: null
-                            } as VertexHttpResponse;
+                            } as HttpResponse<VertexResponse>;
                         }
                         return {
                             type: HttpResponseType.FIELD_ERROR,
@@ -117,7 +118,7 @@ export function updateVertex(projectId: string, vertexId: string, name: string, 
                                 message: detail.msg
                             })),
                             response: null
-                        } as VertexHttpResponse;
+                        } as HttpResponse<VertexResponse>;
                     })
                 }
             }
@@ -128,7 +129,7 @@ export function updateVertex(projectId: string, vertexId: string, name: string, 
                     generalErrorMessage: null,
                     fieldErrors: null,
                     response: data
-                } as VertexHttpResponse;
+                } as HttpResponse<VertexResponse>;
             });
         })
         .then(data => {

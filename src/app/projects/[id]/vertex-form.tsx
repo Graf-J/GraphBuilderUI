@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DeleteIcon } from "./delete-icon";
 import { addVertex, deleteVertex, updateVertex } from '@/services/vertex-service';
 import { HttpResponseType } from '@/models/http/http-response-type';
-import { VertexHttpResponse } from '@/models/http/vertex-http-response';
+import { HttpResponse } from '@/models/http/http-response';
 import { VertexResponse } from '@/models/response/vertex-response-model';
 import { toast } from 'react-hot-toast';
 
@@ -36,8 +36,8 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
     useEffect(() => {
         if (selectedVertex) {
             setVertexFormValues({
-                name: selectedVertex.name || '',
-                radius: selectedVertex.radius || 30,
+                name: selectedVertex.name,
+                radius: selectedVertex.radius,
                 properties: selectedVertex.properties.map((property: any) => ({
                     id: property.id,
                     key: property.key,
@@ -45,7 +45,7 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
                     datatype: property.datatype,
                     isInvalid: false,
                     errorMessage: ""
-                })) || [],
+                })),
             });
         } else {
             setVertexFormValues({
@@ -61,6 +61,7 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
     // Button Click Handlers
     const handleCreateVertexSubmit = async () => {
         setIsCreateLoading(true)
+        
         const res = await addVertex(
             projectId, 
             vertexFormValues.name, 
@@ -74,11 +75,13 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
             graphCenter.y
         )
         evaluateHttpResponse(res, "Successfully added new Vertex", handleCreateVertex);
+
         setIsCreateLoading(false);
     };
 
     const handleUpdateVertexSubmit = async () => {
         setIsUpdateLoading(true)
+
         const res = await updateVertex(
             projectId,
             selectedVertex.id,
@@ -89,18 +92,21 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
             selectedVertex.position_y
         )
         evaluateHttpResponse(res, "Successfully updated Vertex", handleUpdateVertex);
+
         setIsUpdateLoading(false)
     }
 
     const handleDeleteVertexSubmit = async () => {
         setIsDeleteLoading(true)
+        
         await deleteVertex(projectId, selectedVertex.id);
         handleDeleteVertex(selectedVertex.id)
         setIsDeleteLoading(false)
+
         toast.success("Successfully deleted Vertex")
     }
 
-    const evaluateHttpResponse = (res: VertexHttpResponse, toastMessage: string, cb: (vertex: VertexResponse) => void) => {
+    const evaluateHttpResponse = (res: HttpResponse<VertexResponse>, toastMessage: string, cb: (vertex: VertexResponse) => void) => {
         if (res.type === HttpResponseType.GENERAL_ERROR) {
             setGeneralErrorMessage(res.generalErrorMessage);
         } else if (res.type === HttpResponseType.FIELD_ERROR) {
@@ -168,7 +174,7 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
 
     return (
         <>
-        <div className="flex flex-col w-full flex-1">
+            <div className="flex flex-col w-full flex-1">
                 <Input
                     isRequired
                     type="text"
@@ -197,7 +203,7 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
                     </Button>
                 </div>
 
-                <div className="overflow-auto no-scrollbar" style={{ maxHeight: '55vh'}}>
+                <div className="overflow-auto no-scrollbar" style={{ maxHeight: '50vh'}}>
                     <AnimatePresence>
                         {vertexFormValues.properties.map((property, index) => (
                         <motion.div

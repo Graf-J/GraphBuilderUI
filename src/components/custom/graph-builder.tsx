@@ -18,7 +18,7 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
         if (cyRef.current) {
             const edges: CollectionReturnValue = cyRef.current.elements('edge');
             edges.forEach((edge: SingularElementReturnValue) => {
-                const multiEdge = edge.data('multi_edge');
+                const multiEdge = edge.data('multiEdge');
     
                 const edgeStyles = {
                     'target-arrow-shape': multiEdge ? 'triangle-backcurve' : 'diamond',
@@ -73,7 +73,7 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
                     'arrow-scale': 2,
                     'text-background-opacity': 0.85,
                     'curve-style': 'bezier',
-                    'control-point-step-size': 75,
+                    'control-point-step-size': 150,
                     'color': isDarkMode ? 'white' : 'black',
                     'text-background-color': isDarkMode ? 'black' : 'white',
                     'line-color': isDarkMode ? 'white' : 'black',
@@ -109,13 +109,13 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
     }, [eventHandlers])
     
     const handleEdgeSelect = useCallback((event: EventObject) => {
-        const edge: EdgeRequest = {
+        const edge = {
             id: event.target.data().id,
             name: event.target.data().label,
             multi_edge: event.target.data().multiEdge,
             properties: event.target.data().properties,
-            source_vertex_id: event.target.data().source,
-            target_vertex_id: event.target.data().target
+            source_vertex_name: event.cy.getElementById(event.target.data().source)[0].data().label,
+            target_vertex_name: event.cy.getElementById(event.target.data().target)[0].data().label
         };
     
         eventHandlers.onEdgeSelect(edge);
