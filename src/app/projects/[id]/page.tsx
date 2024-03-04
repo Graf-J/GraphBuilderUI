@@ -9,6 +9,9 @@ import { EdgeRequest } from '@/models/request/edge-request-model';
 import { VertexResponse } from '@/models/response/vertex-response-model';
 import { GraphResponse } from '@/models/response/graph-response-model';
 import { EdgeResponse } from '@/models/response/edge-response-model';
+import { getGraph } from '@/services/graph-service';
+import { HttpResponseType } from '@/models/http/http-response-type';
+import toast from 'react-hot-toast';
 
 export default function Page({ params }: { params: { id: string } }) {
     const [graph, setGraph] = useState<GraphResponse | null>(null);
@@ -21,12 +24,21 @@ export default function Page({ params }: { params: { id: string } }) {
 
 
     useEffect(() => {
-        const getGraph = async () => {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/projects/${params.id}/graph`)
-            setGraph(await res.json())
+        const fetchGraph = async () => {
+            try {
+                const response = await getGraph(params.id)
+    
+                if (response.type === HttpResponseType.GENERAL_ERROR) {
+                    toast.error(response.generalErrorMessage);
+                } else {
+                    setGraph(response.response)
+                }
+            } catch {
+                toast.error('Internal Server Error')
+            }
         }
 
-        getGraph()
+        fetchGraph()
     }, [params.id])
 
     const handleTabClick = (key: string) => {

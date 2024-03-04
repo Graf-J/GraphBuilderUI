@@ -27,7 +27,6 @@ export async function buildProject(projectId: string, port: number, volume?: str
 }
 
 function buildResponse(response: Response, result: any): HttpResponse<void> {
-    console.log(response);
     if (!response.ok) {
         if (response.status === 409) {
             return {
