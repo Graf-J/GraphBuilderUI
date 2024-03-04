@@ -17,7 +17,7 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
                 const multiEdge = edge.data('multi_edge');
     
                 const edgeStyles = {
-                    'target-arrow-shape': multiEdge ? 'triangle-backcurve' : 'diamond',
+                    'target-arrow-shape': multiEdge ? 'diamond' : 'triangle-backcurve',
                 };
   
                 edge.style(edgeStyles)
@@ -88,7 +88,6 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
 
     return (
         <div className="shadow-lg rounded-lg h-full w-full dark:bg-zinc-900 bg-gray-300 dark:bg-dot-white/[0.2] bg-dot-black/[0.2] relative flex items-center justify-center">
-            <div className="rounded-lg absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
             <CytoscapeComponent
                 className="h-full w-full"
                 wheelSensitivity={0.3}

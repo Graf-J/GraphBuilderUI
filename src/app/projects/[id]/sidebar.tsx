@@ -2,12 +2,6 @@ import { Tabs, Tab } from "@nextui-org/react";
 import VertexForm from "./vertex-form";
 import EdgeForm from "./edge-form";
 
-interface VertexFormValues {
-    name: string;
-    radius: number;
-    properties: any[];
-}
-
 export default function Sidebar({ projectId, vertices, graphCenter, selectedTab, selectedEdge, selectedVertex, handleTabClick, handleCreateVertex, handleUpdateVertex, handleDeleteVertex, handleCreateEdge, handleUpdateEdge, handleDeleteEdge }: any) {
     
 

@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from "@nextui-org/react";
 import GraphBuilder from '@/components/custom/graph-builder';
 import Sidebar from './sidebar';
+import Toolbar from './toolbar';
 import { VertexRequest } from '@/models/request/vertex-request-model';
 import { EdgeRequest } from '@/models/request/edge-request-model';
 import { VertexResponse } from '@/models/response/vertex-response-model';
@@ -120,7 +120,7 @@ export default function Page({ params }: { params: { id: string } }) {
     
                     if (vertexIndex !== -1) {
                         if (prevGraph.vertices[vertexIndex].radius !== updatedVertex.radius) {
-                            setRefresh(prev => prev + 1);
+                            refreshGraph()
                         }
 
                         // Create a new array with the updated vertex
@@ -182,6 +182,10 @@ export default function Page({ params }: { params: { id: string } }) {
         }
     }, [graph])
 
+    const refreshGraph = () => {
+        setRefresh(prev => prev + 1);
+    }
+
     useEffect(() => {
         calculateGraphCenter();
     }, [calculateGraphCenter, graph]);
@@ -227,23 +231,20 @@ export default function Page({ params }: { params: { id: string } }) {
             </div>
         </div>
         <div className="flex-1 flex flex-col rounded-tr-lg rounded-br-lg">
-            <div className="bg-gray-300 dark:bg-gray-900 rounded-tr-lg p-2 flex justify-end border-b-2 border-gray-800 dark:border-gray-300">
-                <Button color="success">Build</Button>  
-            </div>
+            <Toolbar projectId={params.id} refreshGraph={refreshGraph} />
             <div className="shadow-lg h-full w-full dark:bg-black bg-white dark:bg-dot-white/[0.2] bg-dot-black/[0.2] relative flex items-center justify-center rounded-br-lg">
-            <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] rounded-br-lg"></div>
                 { graph && 
-                    <GraphBuilder 
-                        projectId={params.id}
-                        graph={graph} 
-                        eventHandlers={{
-                            onVertexSelect,
-                            onEdgeSelect,
-                            onElementUnselect,
-                            handleUpdateVertex
-                        }}
-                        refresh={refresh}
-                    /> 
+                <GraphBuilder 
+                    projectId={params.id}
+                    graph={graph} 
+                    eventHandlers={{
+                        onVertexSelect,
+                        onEdgeSelect,
+                        onElementUnselect,
+                        handleUpdateVertex
+                    }}
+                    refresh={refresh}
+                /> 
                 }
             </div>
         </div>

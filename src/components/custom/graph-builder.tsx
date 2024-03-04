@@ -21,7 +21,7 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
                 const multiEdge = edge.data('multiEdge');
     
                 const edgeStyles = {
-                    'target-arrow-shape': multiEdge ? 'triangle-backcurve' : 'diamond',
+                    'target-arrow-shape': multiEdge ? 'diamond' : 'triangle-backcurve',
                 };
   
                 edge.style(edgeStyles)
@@ -30,14 +30,14 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
                     edge.style({
                         'line-color': isDarkMode ? '#75FA8D' : '#08A045',
                         'target-arrow-color': isDarkMode ? '#75FA8D' : '#08A045',
-                        'target-arrow-shape': multiEdge ? 'triangle-backcurve' : 'diamond',
+                        'target-arrow-shape': multiEdge ? 'diamond' : 'triangle-backcurve',
                     });
                 })
                 edge.on('unselect', () => {
                     edge.style({
                         'line-color': isDarkMode ? 'white' : 'black',
                         'target-arrow-color':  isDarkMode ? 'white' : 'black',
-                        'target-arrow-shape': multiEdge ? 'triangle-backcurve' : 'diamond',
+                        'target-arrow-shape': multiEdge ? 'diamond' : 'triangle-backcurve',
                     });
                 })
             });
