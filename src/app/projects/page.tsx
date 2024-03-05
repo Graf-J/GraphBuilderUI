@@ -8,12 +8,14 @@ import { getProjects } from '@/services/project-service';
 import { AddIcon } from "./add-icon";
 import toast from 'react-hot-toast';
 import CreateModal from "./create-modal";
+import { useProjectStore } from '@/store/project-store';
 
 
 export default function Page() {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
 
-    const [projects, setProjects] = useState<ProjectResponse[]>();
+    // const [projects, setProjects] = useState<ProjectResponse[]>();
+    const { projects, set: setProjects } = useProjectStore()
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -31,7 +33,7 @@ export default function Page() {
         }
 
         fetchProjects()
-    }, [])
+    }, [setProjects])
 
 
     return(

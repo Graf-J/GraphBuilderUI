@@ -4,9 +4,12 @@ import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Checkb
 import { deleteProject } from '@/services/project-service';
 import toast from 'react-hot-toast';
 import { HttpResponseType } from '@/models/http/http-response-type';
+import { useProjectStore } from '@/store/project-store';
 
 export default function DeleteModal({ project, isOpen, onOpenChange }: { project: ProjectResponse, isOpen: boolean, onOpenChange: (open: boolean) => void}) {
   const [isDeleteProjectOutputChecked, setIsDeleteProjectOutputChecked] = useState<boolean>(false);
+
+  const removeProject = useProjectStore((state) => state.delete);
 
   const onSubmit = async (onClose: () => void) => {
     try {
@@ -16,7 +19,7 @@ export default function DeleteModal({ project, isOpen, onOpenChange }: { project
             toast.error(response.generalErrorMessage);
         } else {
             toast.success('Successfully deleted Project');
-            // TODO: Update Global Store and remove Project
+            removeProject(project.id);
             onClose();
         }
     } catch {

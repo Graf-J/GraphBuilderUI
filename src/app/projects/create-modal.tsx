@@ -4,11 +4,14 @@ import toast from "react-hot-toast";
 import { createProject } from "@/services/project-service";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import { FieldError } from "@/models/http/field-error";
+import { useProjectStore } from "@/store/project-store";
 
 
 export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean, onOpenChange: (open: boolean) => void }) {
     const [name, setName] = useState<string>('');
     const [nameErrorMessage, setNameErrorMessage] = useState<string>('');
+
+    const addProject = useProjectStore((state) => state.add);
 
     const handleNameChange = async (e: ChangeEvent<HTMLInputElement>) => {
         setNameErrorMessage('');
@@ -29,7 +32,7 @@ export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean,
                 toast.error(response.generalErrorMessage);
             } else {
                 toast.success('Successfully created Project');
-                // TODO: Update Global Store and add new Project from response.response
+                addProject(response.response!);
                 onClose();
             }
         } catch {
