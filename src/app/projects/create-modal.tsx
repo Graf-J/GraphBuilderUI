@@ -5,6 +5,7 @@ import { createProject } from "@/services/project-service";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import { FieldError } from "@/models/http/field-error";
 import { useProjectStore } from "@/store/project-store";
+import { ProjectRequest } from "@/models/request/project-request-model";
 
 
 export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean, onOpenChange: (open: boolean) => void }) {
@@ -20,7 +21,7 @@ export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean,
     
     const onSubmit = async (onClose: () => void) => {
         try {
-            const response = await createProject(name);
+            const response = await createProject(new ProjectRequest(name));
 
             if (response.type === HttpResponseType.FIELD_ERROR) {
                 response.fieldErrors?.forEach((fieldError: FieldError) => {

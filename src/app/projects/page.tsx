@@ -1,10 +1,11 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Button, useDisclosure } from "@nextui-org/react";
 import ProjectCard from '@/components/custom/project-card';
 import { HttpResponseType } from '@/models/http/http-response-type';
 import { ProjectResponse } from '@/models/response/project-response-model';
 import { getProjects } from '@/services/project-service';
+import { Project } from '@/models/application/project';
 import { AddIcon } from "./add-icon";
 import toast from 'react-hot-toast';
 import CreateModal from "./create-modal";
@@ -14,8 +15,7 @@ import { useProjectStore } from '@/store/project-store';
 export default function Page() {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
 
-    // const [projects, setProjects] = useState<ProjectResponse[]>();
-    const { projects, set: setProjects } = useProjectStore()
+    const { projects, set: setProjects } = useProjectStore();
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -25,7 +25,8 @@ export default function Page() {
                 if (response.type === HttpResponseType.GENERAL_ERROR) {
                     toast.error(response.generalErrorMessage)
                 } else {
-                    setProjects(response.response!);
+                    const projects = response.response!.map((projectResponse: ProjectResponse) => Project.fromResponse(projectResponse))
+                    setProjects(projects);
                 }
             } catch {
                 toast.error('Internal Server Error')

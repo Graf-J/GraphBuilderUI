@@ -1,22 +1,15 @@
 import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
+import { BuildRequest } from "@/models/request/build-request-model";
 
-export async function buildProject(projectId: string, port: number, volume?: string): Promise<HttpResponse<void>> {
+export async function buildProject(projectId: string, buildRequest: BuildRequest): Promise<HttpResponse<void>> {
     try {
-        const requestBody: { port: number, volume?: string } = {
-            port,
-        };
-
-        if (volume !== undefined && volume !== '') {
-            requestBody['volume'] = volume;
-        }
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/projects/${projectId}/build`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(buildRequest)
         })
         const result = await response.json()
 

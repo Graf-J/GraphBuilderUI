@@ -6,6 +6,7 @@ import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import toast from "react-hot-toast";
 import { FieldError } from "@/models/http/field-error";
+import { BuildRequest } from "@/models/request/build-request-model";
 
 
 export default function Toolbar({ projectId, refreshGraph }: any) {
@@ -22,8 +23,7 @@ export default function Toolbar({ projectId, refreshGraph }: any) {
     const onBuildClick = async (closeModal: () => void) => {
         try {
             setIsBuildLoading(true)
-
-            const res = await buildProject(projectId, port, volume)
+            const res = await buildProject(projectId, new BuildRequest(port, volume === '' ? undefined : volume))
             evaluateHttpResponse(res, closeModal)
         } catch (error) {
             toast.error('Internal Server Error')

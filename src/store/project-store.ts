@@ -1,16 +1,16 @@
-import { ProjectResponse } from '@/models/response/project-response-model'
 import { create } from 'zustand'
+import { Project } from '@/models/application/project'
 
 interface ProjectState {
-    projects: ProjectResponse[]
-    set: (projects: ProjectResponse[]) => void
-    add: (project: ProjectResponse) => void
+    projects: Project[]
+    set: (projects: Project[]) => void
+    add: (project: Project) => void
     delete: (projectId: string) => void
 }
 
 export const useProjectStore = create<ProjectState>((set) => ({
     projects: [],
-    set: (projects: ProjectResponse[]) => set((state) => ({ projects: projects })),
-    add: (project: ProjectResponse) => set((state) => ({ projects: [project, ...state.projects] })),
+    set: (projects: Project[]) => set((state) => ({ projects: projects })),
+    add: (project: Project) => set((state) => ({ projects: [project, ...state.projects] })),
     delete: (projectId: string) => set((state) => ({ projects: state.projects.filter(p => p.id !== projectId) })),
 }));
