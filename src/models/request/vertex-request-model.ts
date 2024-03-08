@@ -1,9 +1,9 @@
-import { Property } from '../property-model';
+import { PropertyResponse } from '../response/property-response-model';
 
 export interface VertexRequest {
     id: string;
     name: string;
-    properties: Property[];
+    properties: PropertyResponse[];
     position_x: number;
     position_y: number;
     radius: number;

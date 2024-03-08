@@ -1,10 +1,9 @@
 import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
-import { Property } from "@/models/property-model";
-import { EdgeRequest } from "@/models/request/edge-request-model";
+import { PropertyResponse } from "@/models/response/property-response-model";
 import { EdgeResponse } from "@/models/response/edge-response-model";
 
-export async function addEdge(projectId: string, name: string, multiEdge: boolean, properties: Property[], sourceVertexId: string, targetVertexId: string): Promise<HttpResponse<EdgeResponse>> {
+export async function addEdge(projectId: string, name: string, multiEdge: boolean, properties: PropertyResponse[], sourceVertexId: string, targetVertexId: string): Promise<HttpResponse<EdgeResponse>> {
     try {
         const newEdge = {
             name,
@@ -29,7 +28,7 @@ export async function addEdge(projectId: string, name: string, multiEdge: boolea
     }
 }
 
-export async function updateEdge(projectId: string, edgeId: string, name: string, multiEdge: boolean, properties: Property[], sourceVertexId: string, targetVertexId: string): Promise<HttpResponse<EdgeResponse>> {
+export async function updateEdge(projectId: string, edgeId: string, name: string, multiEdge: boolean, properties: PropertyResponse[], sourceVertexId: string, targetVertexId: string): Promise<HttpResponse<EdgeResponse>> {
     try {
         const updatedEdge = {
             name,

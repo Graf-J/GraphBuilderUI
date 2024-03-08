@@ -1,91 +1,63 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { Button, Input, Switch, Tooltip, Select, SelectItem, Checkbox } from "@nextui-org/react";
-import { VertexResponse } from '@/models/response/vertex-response-model';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DeleteIcon } from './delete-icon';
-import { Property } from '@/models/property-model';
-import { v4 as uuidv4 } from 'uuid';
+import { PropertyResponse } from '@/models/response/property-response-model';
 import { addEdge, deleteEdge, updateEdge } from '@/services/edge-service';
 import { HttpResponse } from '@/models/http/http-response';
 import { EdgeResponse } from '@/models/response/edge-response-model';
 import { HttpResponseType } from '@/models/http/http-response-type';
 import { toast } from 'react-hot-toast';
+import { useGraphStore } from '@/store/graph-store';
+import { Edge } from '@/models/application/edge';
+import { FormEdge } from '@/models/form/edge-form-model';
+import { Vertex } from '@/models/application/vertex';
+import { FieldError } from '@/models/http/field-error';
+import { FormProperty } from '@/models/form/property-form-model';
 
 
-interface EdgeFormValues {
-    name: string;
-    multiEdge: boolean;
-    sourceVertexName: string | null;
-    targetVertexName: string | null;
-    properties: any[];
-}
+export default function EdgeForm({ projectId }: any) {
+    const [edgeFormValues, setEdgeFormValues] = useState<FormEdge>(FormEdge.empty())
 
-export default function EdgeForm({ projectId, vertices, selectedEdge, handleCreateEdge, handleUpdateEdge, handleDeleteEdge }: any) {
-    const [edgeFormValues, setEdgeFormValues] = useState<EdgeFormValues>({
-        name: '',
-        multiEdge: true,
-        sourceVertexName: '',
-        targetVertexName: '',
-        properties: []
-    })
-
-    const [isCreateLoading, setIsCreateLoading] = useState<boolean>(false);
-    const [isUpdateLoading, setIsUpdateLoading] = useState<boolean>(false);
-    const [isDeleteLoading, setIsDeleteLoading] = useState<boolean>(false); 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     
-    const [isNameInvalid, setIsNameInvalid] = useState<boolean>();
-    const [nameErrorMessage, setNameErrorMessage] = useState<string>();
-    const [isSourceVertexInvalid, setIsSourceVertexInvalid] = useState<boolean>();
-    const [sourceVertexErrorMessage, setSourceVertexErrorMessage] = useState<string>();
-    const [isTargetVertexInvalid, setIsTargetVertexInvalid] = useState<boolean>();
-    const [targetVertexErrorMessage, setTargetVertexErrorMessage] = useState<string>();
-    const [generalErrorMessage, setGeneralErrorMessage] = useState<string | null>();
+    const [isSourceVertexMissing, setIsSourceVertexMissing] = useState<boolean>(false);
+    const [isTargetVertexMissing, setIsTargetVertexMissing] = useState<boolean>(false);
+
+    const { 
+        graph,
+        selectedEdge,
+        resetSelectedEdge,
+        addEdge: addEdgeToStore, 
+        updateEdge: updateEdgeInStore, 
+        deleteEdge: deleteEdgeFromStore 
+    } = useGraphStore()
 
     useEffect(() => {
         if (selectedEdge) {
-            setEdgeFormValues({
-                name: selectedEdge.name,
-                multiEdge: selectedEdge.multi_edge,
-                sourceVertexName: selectedEdge.source_vertex_name,
-                targetVertexName: selectedEdge.target_vertex_name,
-                properties: selectedEdge.properties.map((property: any) => ({
-                    id: property.id,
-                    key: property.key,
-                    required: property.required,
-                    datatype: property.datatype,
-                    isInvalid: false,
-                    errorMessage: ""
-                })),
-            })
+            setEdgeFormValues(selectedEdge);
         } else {
-            setEdgeFormValues({
-                name: '',
-                multiEdge: true,
-                sourceVertexName: '',
-                targetVertexName: '',
-                properties: []
-            })
+            setEdgeFormValues(FormEdge.empty());
         }
-        setIsNameInvalid(false)
-        setNameErrorMessage("")
     }, [selectedEdge])
 
     // Button Click Handlers
     const handleCreateEdgeSubmit = async () => {
         try {
-            setIsCreateLoading(true)
-            const sourceVertex = vertices.find((vertex: any) => vertex.name === edgeFormValues.sourceVertexName)
+            setIsLoading(true)
+
+            let vertexError: boolean = false;
+            const sourceVertex = graph!.vertices.find((vertex: Vertex) => vertex.label === edgeFormValues.sourceVertexName);
             if (!sourceVertex) {
-                setIsSourceVertexInvalid(true)
-                setSourceVertexErrorMessage("Required")
-                return
+                setIsSourceVertexMissing(true);
+                vertexError = true
             }
-            const targetVertex = vertices.find((vertex: any) => vertex.name === edgeFormValues.targetVertexName)
+            const targetVertex = graph!.vertices.find((vertex: Vertex) => vertex.label === edgeFormValues.targetVertexName);
             if (!targetVertex) {
-                setIsTargetVertexInvalid(true)
-                setTargetVertexErrorMessage("Required")
-                return
+                setIsTargetVertexMissing(true);
+                vertexError = true;
             }
+            if (vertexError) return;
 
             const res = await addEdge(
                 projectId,
@@ -96,36 +68,37 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                     required: property.required,
                     datatype: property.datatype
                 })),
-                sourceVertex.id,
-                targetVertex.id,
+                sourceVertex!.id,
+                targetVertex!.id,
             );
-            evaluateHttpResponse(res, "Successfully added new Edge", handleCreateEdge)
+            evaluateHttpResponse(res, 'create');
         } catch (error) {
             console.error(error);
         } finally {
-            setIsCreateLoading(false)
+            setIsLoading(false)
         }
     }
 
     const handleUpdateEdgeSubmit = async () => {
         try {
-            setIsUpdateLoading(true)
-            const sourceVertex = vertices.find((vertex: any) => vertex.name === edgeFormValues.sourceVertexName)
+            setIsLoading(true)
+
+            let vertexError: boolean = false;
+            const sourceVertex = graph!.vertices.find((vertex: Vertex) => vertex.label === edgeFormValues.sourceVertexName);
             if (!sourceVertex) {
-                setIsSourceVertexInvalid(true)
-                setSourceVertexErrorMessage("Required")
-                return
+                setIsSourceVertexMissing(true);
+                vertexError = true
             }
-            const targetVertex = vertices.find((vertex: any) => vertex.name === edgeFormValues.targetVertexName)
+            const targetVertex = graph!.vertices.find((vertex: Vertex) => vertex.label === edgeFormValues.targetVertexName);
             if (!targetVertex) {
-                setIsTargetVertexInvalid(true)
-                setTargetVertexErrorMessage("Required")
-                return
+                setIsTargetVertexMissing(true);
+                vertexError = true;
             }
+            if (vertexError) return;
 
             const res = await updateEdge(
                 projectId,
-                selectedEdge.id,
+                selectedEdge!.id!,
                 edgeFormValues.name,
                 edgeFormValues.multiEdge,
                 edgeFormValues.properties.map(property => ({
@@ -133,66 +106,70 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                     required: property.required,
                     datatype: property.datatype
                 })),
-                sourceVertex.id,
-                targetVertex.id,
+                sourceVertex!.id,
+                targetVertex!.id,
             )
-            evaluateHttpResponse(res, "Successfully updated Edge", handleUpdateEdge)
+            evaluateHttpResponse(res, 'update');
         } catch (error) {
             console.error(error)
         } finally {
-            setIsUpdateLoading(false)
+            setIsLoading(false)
         }
     }
 
-    const evaluateHttpResponse = (res: HttpResponse<EdgeResponse>, toastMessage: string, cb: (vertex: EdgeResponse) => void) => {
+    const evaluateHttpResponse = (res: HttpResponse<EdgeResponse>, operation: string) => {
         if (res.type === HttpResponseType.GENERAL_ERROR) {
-            setGeneralErrorMessage(res.generalErrorMessage);
+            toast.error(res.generalErrorMessage);
         } else if (res.type === HttpResponseType.FIELD_ERROR) {
-            setEdgeFormValues(prevValues => {
-                const newProperties = [...prevValues.properties];
-                res.fieldErrors?.forEach(fieldError => {
-                    if (fieldError.field === 'properties') {
+            res.fieldErrors?.forEach((fieldError: FieldError) => {
+                if (fieldError.field === 'name') {
+                    setEdgeFormValues((prevValues: FormEdge) => {
+                        return { ...prevValues, nameErrorMessage: fieldError.message }
+                    })
+                } else if (fieldError.field === 'properties') {
+                    setEdgeFormValues((prevValues: FormEdge) => {
+                        const newProperties = [...prevValues.properties]
                         newProperties[fieldError.index!] = {
                             ...newProperties[fieldError.index!],
-                            isInvalid: true,
-                            errorMessage: fieldError.message,
-                        };
-                    } else if (fieldError.field === 'name') {
-                        setIsNameInvalid(true)
-                        setNameErrorMessage(fieldError.message)
-                    }
-                });
-    
-                return { ...prevValues, properties: newProperties };
-            });
+                            errorMessage: fieldError.message
+                        }
+
+                        return { ...prevValues, properties: newProperties }
+                    })
+                }
+            })
         } else {
-            cb(res.response!);
-            toast.success(toastMessage)
+            if (operation === 'create') {
+                addEdgeToStore(Edge.fromResponse(res.response!));
+                toast.success('Successfully created Edge');
+                setEdgeFormValues(FormEdge.empty());
+            } else if (operation === 'update') {
+                updateEdgeInStore(Edge.fromResponse(res.response!));
+                toast.success('Successfully updated Edge')
+            }
         }
     }
 
     const handleDeleteEdgeSubmit = async () => {
         try {
-            setIsDeleteLoading(true)
+            setIsLoading(true)
 
-            await deleteEdge(projectId, selectedEdge.id)
-            handleDeleteEdge(selectedEdge.id)
+            await deleteEdge(projectId, selectedEdge!.id!)
+            resetSelectedEdge();
+            deleteEdgeFromStore(selectedEdge!.id!)
+            setIsLoading(false);
 
             toast.success("Successfully deleted Edge")
         } catch (error) {
             console.error(error)
         } finally {
-            setIsDeleteLoading(false)
+            setIsLoading(false)
         }
     }
 
     // On Input Value Change Handlers
     const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setIsNameInvalid(false)
-        setNameErrorMessage("")
-        setGeneralErrorMessage("")
-
-        setEdgeFormValues({ ...edgeFormValues, name: e.target.value})
+        setEdgeFormValues({ ...edgeFormValues, name: e.target.value, nameErrorMessage: '' })
     }
 
     const handleMultiEdgeChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -200,42 +177,42 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
     }
 
     const handleSourceChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        setIsSourceVertexInvalid(false)
-        setSourceVertexErrorMessage("")
+        setIsSourceVertexMissing(false);
         setEdgeFormValues({ ...edgeFormValues, sourceVertexName: e.target.value })
     }
 
     const handleTargetChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        setIsTargetVertexInvalid(false)
-        setTargetVertexErrorMessage("")
+        setIsTargetVertexMissing(false);
         setEdgeFormValues({ ...edgeFormValues, targetVertexName: e.target.value })
     }
 
     const handleAddProperty = () => {
-        setEdgeFormValues((prevValues) => ({
-            ...prevValues,
-            properties: [...prevValues.properties, {id: uuidv4(), key: '', required: true, datatype: 'String', isInvalid: false, errorMessage: ""}],
-        }));
+        setEdgeFormValues((prevValues: FormEdge) => {
+            return {
+                ...prevValues,
+                properties: [...prevValues.properties, FormProperty.empty()]
+            }
+        })
     };
 
     const handleDeleteProperty = (index: number) => {
-        setGeneralErrorMessage("");
         setEdgeFormValues((prevValues) => {
             const newProperties = prevValues.properties.filter((_, i) => i !== index);
             return { ...prevValues, properties: newProperties };
         });
     }
 
-    const handlePropertyChange = (index: number, field: keyof Property, value: string | boolean) => {
-        setGeneralErrorMessage("");
+    const handlePropertyChange = (index: number, field: keyof PropertyResponse, value: string | boolean) => {
         setEdgeFormValues((prevValues) => {
             const newProperties = [...prevValues.properties];
+
             let updatedProperty;
             if (field === 'datatype') {
-                updatedProperty = { ...newProperties[index], [field]: value === "" ? 'String' : value, isInvalid: false, errorMessage: "" };
+                updatedProperty = { ...newProperties[index], [field]: value === "" ? 'String' : value, errorMessage: "" } as FormProperty;
             } else {
-                updatedProperty = { ...newProperties[index], [field]: value, isInvalid: false, errorMessage: "" };
+                updatedProperty = { ...newProperties[index], [field]: value, errorMessage: "" } as FormProperty;
             }
+
             newProperties[index] = updatedProperty;
             return { ...prevValues, properties: newProperties };
         });
@@ -250,8 +227,8 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                     label="Name"
                     variant="bordered"
                     value={edgeFormValues.name}
-                    isInvalid={isNameInvalid}
-                    errorMessage={nameErrorMessage}
+                    isInvalid={edgeFormValues.nameErrorMessage !== ''}
+                    errorMessage={edgeFormValues.nameErrorMessage}
                     onChange={handleNameChange}
                     className="bg-gray-100 dark:bg-gray-700 rounded-xl mt-5"
                 />
@@ -271,14 +248,14 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                         size="md"
                         className="dark:dark mr-2"
                         label="Source"
-                        isInvalid={isSourceVertexInvalid}
-                        errorMessage={sourceVertexErrorMessage}
+                        isInvalid={isSourceVertexMissing}
+                        errorMessage={isSourceVertexMissing ? 'Required' : ''}
                         selectedKeys={edgeFormValues.sourceVertexName ? [edgeFormValues.sourceVertexName] : []}
                         onChange={handleSourceChange}
                     >
-                        {vertices.map((vertex: VertexResponse) => (
-                            <SelectItem key={vertex.name} value={vertex.name} className="dark:dark text-black">
-                                {vertex.name}
+                        {graph!.vertices.map((vertex: Vertex) => (
+                            <SelectItem key={vertex.label} value={vertex.label} className="dark:dark text-black">
+                                {vertex.label}
                             </SelectItem>
                         ))}
                     </Select>
@@ -288,14 +265,14 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                         size="md"
                         className="dark:dark"
                         label="Target"
-                        isInvalid={isTargetVertexInvalid}
-                        errorMessage={targetVertexErrorMessage}
+                        isInvalid={isTargetVertexMissing}
+                        errorMessage={isTargetVertexMissing ? 'Required' : ''}
                         selectedKeys={edgeFormValues.targetVertexName ? [edgeFormValues.targetVertexName] : []}
                         onChange={handleTargetChange}
                     >
-                        {vertices.map((vertex: VertexResponse) => (
-                            <SelectItem key={vertex.name} value={vertex.id} className="dark:dark text-black">
-                                {vertex.name}
+                        {graph!.vertices.map((vertex: Vertex) => (
+                            <SelectItem key={vertex.label} value={vertex.label} className="dark:dark text-black">
+                                {vertex.label}
                             </SelectItem>
                         ))}
                     </Select>
@@ -325,7 +302,7 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                                     type="text"
                                     label="Key"
                                     variant="bordered"
-                                    isInvalid={property.isInvalid}
+                                    isInvalid={property.errorMessage !== ''}
                                     errorMessage={property.errorMessage}
                                     value={property.key}
                                     onChange={(e) => handlePropertyChange(index, 'key', e.target.value)}
@@ -358,20 +335,18 @@ export default function EdgeForm({ projectId, vertices, selectedEdge, handleCrea
                     </AnimatePresence>
                 </div>
             </div>
-
-            <p className="text-red-500 mb-4 text-center">{generalErrorMessage}</p>
                         
             <div className="flex w-full">
                 { selectedEdge ? 
                 <div className="w-full flex">
-                    <Button isLoading={isUpdateLoading} isDisabled={isDeleteLoading} color="warning" variant="ghost" onClick={handleUpdateEdgeSubmit} className="flex-1 mr-2">
+                    <Button isDisabled={isLoading} color="warning" variant="ghost" onClick={handleUpdateEdgeSubmit} className="flex-1 mr-2">
                         Update Edge
                     </Button>
-                    <Button isLoading={isDeleteLoading} isDisabled={isUpdateLoading} color="danger" variant="ghost" onClick={handleDeleteEdgeSubmit} className="flex-1">
+                    <Button isDisabled={isLoading} color="danger" variant="ghost" onClick={handleDeleteEdgeSubmit} className="flex-1">
                         Delete Edge
                     </Button>
                 </div> :
-                <Button isLoading={isCreateLoading} color="success" variant="ghost" onClick={handleCreateEdgeSubmit} className="flex-1">
+                <Button isLoading={isLoading} color="success" variant="ghost" onClick={handleCreateEdgeSubmit} className="flex-1">
                     Create Edge
                 </Button> 
                 }

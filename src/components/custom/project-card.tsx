@@ -9,6 +9,7 @@ import { getGraph } from '@/services/graph-service';
 import toast from 'react-hot-toast';
 import { HttpResponseType } from '@/models/http/http-response-type';
 import { GraphResponse } from '@/models/response/graph-response-model';
+import { Graph } from '@/models/application/graph';
 
 
 export default function ProjectCard({ project }: { project: ProjectResponse }) {
@@ -57,7 +58,7 @@ export default function ProjectCard({ project }: { project: ProjectResponse }) {
                                 <div className="h-24 rounded-lg bg-default-300"></div>
                             </Skeleton>
                             ) : (
-                                <MiniGraphBuilder graph={graph} />
+                                <MiniGraphBuilder graph={Graph.fromResponse(graph)} />
                             )
                         }
                     </CardBody>

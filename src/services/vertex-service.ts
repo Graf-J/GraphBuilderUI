@@ -1,9 +1,9 @@
-import { Property } from "@/models/property-model";
+import { PropertyResponse } from "@/models/response/property-response-model";
 import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import { VertexResponse } from "@/models/response/vertex-response-model";
 
-export function addVertex(projectId: string, name: string, radius: number, properties: Property[], position_x: number, position_y: number): Promise<HttpResponse<VertexResponse>> {
+export function addVertex(projectId: string, name: string, radius: number, properties: PropertyResponse[], position_x: number, position_y: number): Promise<HttpResponse<VertexResponse>> {
     const newVertex = {
         name,
         properties,
@@ -72,7 +72,7 @@ export function addVertex(projectId: string, name: string, radius: number, prope
         });
 }
 
-export function updateVertex(projectId: string, vertexId: string, name: string, radius: number, properties: Property[], position_x: number, position_y: number) {
+export function updateVertex(projectId: string, vertexId: string, name: string, radius: number, properties: PropertyResponse[], position_x: number, position_y: number) {
     const newVertex = {
         name: name,
         properties: properties,

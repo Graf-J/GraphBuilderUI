@@ -1,66 +1,45 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Button, Input, Slider, Switch, Tooltip, Select, SelectItem } from "@nextui-org/react";
 import { motion, AnimatePresence } from 'framer-motion'
-import { Property } from "@/models/property-model";
-import { v4 as uuidv4 } from 'uuid';
+import { PropertyResponse } from "@/models/response/property-response-model";
 import { DeleteIcon } from "./delete-icon";
 import { addVertex, deleteVertex, updateVertex } from '@/services/vertex-service';
 import { HttpResponseType } from '@/models/http/http-response-type';
 import { HttpResponse } from '@/models/http/http-response';
 import { VertexResponse } from '@/models/response/vertex-response-model';
 import { toast } from 'react-hot-toast';
+import { useGraphStore } from '@/store/graph-store';
+import { Vertex } from '@/models/application/vertex';
+import { FormVertex } from '@/models/form/vertex-form-model';
+import { FieldError } from '@/models/http/field-error';
+import { FormProperty } from '@/models/form/property-form-model';
 
 
-interface VertexFormValues {
-    name: string;
-    radius: number;
-    properties: any[];
-}
+export default function VertexForm({ projectId, graphCenter }: any) {
+    const [vertexFormValues, setVertexFormValues] = useState<FormVertex>(FormVertex.empty());
 
-export default function VertexForm({ projectId, graphCenter, selectedVertex, handleCreateVertex, handleUpdateVertex, handleDeleteVertex }: any) {
-    const [vertexFormValues, setVertexFormValues] = useState<VertexFormValues>({
-        name: '',
-        radius: 30,
-        properties: [],
-    });
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const [isCreateLoading, setIsCreateLoading] = useState<boolean>(false);
-    const [isUpdateLoading, setIsUpdateLoading] = useState<boolean>(false);
-    const [isDeleteLoading, setIsDeleteLoading] = useState<boolean>(false);
-    
-    const [isNameInvalid, setIsNameInvalid] = useState<boolean>();
-    const [nameErrorMessage, setNameErrorMessage] = useState<string>();
-    const [generalErrorMessage, setGeneralErrorMessage] = useState<string | null>();
+    const { 
+        selectedVertex,
+        resetSelectedVertex,
+        addVertex: addVertexToStore, 
+        updateVertex: updateVertexInStore, 
+        deleteVertex: deleteVertexFromStore 
+    } = useGraphStore();
 
     // Initial Load of the Input Fields
     useEffect(() => {
         if (selectedVertex) {
-            setVertexFormValues({
-                name: selectedVertex.name,
-                radius: selectedVertex.radius,
-                properties: selectedVertex.properties.map((property: any) => ({
-                    id: property.id,
-                    key: property.key,
-                    required: property.required,
-                    datatype: property.datatype,
-                    isInvalid: false,
-                    errorMessage: ""
-                })),
-            });
+            setVertexFormValues(selectedVertex);
         } else {
-            setVertexFormValues({
-                name: '',
-                radius: 30,
-                properties: [],
-            });
+            setVertexFormValues(FormVertex.empty());
         }
-        setIsNameInvalid(false)
-        setNameErrorMessage("")
     }, [selectedVertex]);
 
     // Button Click Handlers
     const handleCreateVertexSubmit = async () => {
-        setIsCreateLoading(true)
+        setIsLoading(true)
         
         const res = await addVertex(
             projectId, 
@@ -74,99 +53,104 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
             graphCenter.x,
             graphCenter.y
         )
-        evaluateHttpResponse(res, "Successfully added new Vertex", handleCreateVertex);
+        evaluateHttpResponse(res, 'create');
 
-        setIsCreateLoading(false);
+        setIsLoading(false);
     };
 
     const handleUpdateVertexSubmit = async () => {
-        setIsUpdateLoading(true)
+        setIsLoading(true)
 
         const res = await updateVertex(
             projectId,
-            selectedVertex.id,
+            selectedVertex!.id!,
             vertexFormValues.name,
             vertexFormValues.radius,
             vertexFormValues.properties,
-            selectedVertex.position_x,
-            selectedVertex.position_y
+            selectedVertex!.positionX,
+            selectedVertex!.positionY
         )
-        evaluateHttpResponse(res, "Successfully updated Vertex", handleUpdateVertex);
+        evaluateHttpResponse(res, 'update');
 
-        setIsUpdateLoading(false)
+        setIsLoading(false)
     }
 
     const handleDeleteVertexSubmit = async () => {
-        setIsDeleteLoading(true)
+        setIsLoading(true)
         
-        await deleteVertex(projectId, selectedVertex.id);
-        handleDeleteVertex(selectedVertex.id)
-        setIsDeleteLoading(false)
+        await deleteVertex(projectId, selectedVertex!.id!);
+        deleteVertexFromStore(selectedVertex!.id!)
+        resetSelectedVertex();
+        setIsLoading(false)
 
-        toast.success("Successfully deleted Vertex")
+        toast.success("Successfully deleted Vertex");
     }
 
-    const evaluateHttpResponse = (res: HttpResponse<VertexResponse>, toastMessage: string, cb: (vertex: VertexResponse) => void) => {
+    const evaluateHttpResponse = (res: HttpResponse<VertexResponse>, operation: string) => {
         if (res.type === HttpResponseType.GENERAL_ERROR) {
-            setGeneralErrorMessage(res.generalErrorMessage);
+            toast.error(res.generalErrorMessage);
         } else if (res.type === HttpResponseType.FIELD_ERROR) {
-            setVertexFormValues(prevValues => {
-                const newProperties = [...prevValues.properties];
-                res.fieldErrors?.forEach(fieldError => {
-                    if (fieldError.field === 'properties') {
+            res.fieldErrors?.forEach((fieldError: FieldError) => {
+                if (fieldError.field === 'name') {
+                    setVertexFormValues((prevValues: FormVertex) => {
+                        return { ...prevValues, nameErrorMessage: fieldError.message }
+                    })
+                } else if (fieldError.field === 'properties') {
+                    setVertexFormValues((prevValues: FormVertex) => {
+                        const newProperties = [...prevValues.properties]
                         newProperties[fieldError.index!] = {
                             ...newProperties[fieldError.index!],
-                            isInvalid: true,
-                            errorMessage: fieldError.message,
-                        };
-                    } else if (fieldError.field === 'name') {
-                        setIsNameInvalid(true)
-                        setNameErrorMessage(fieldError.message)
-                    }
-                });
-    
-                return { ...prevValues, properties: newProperties };
-            });
+                            errorMessage: fieldError.message
+                        }
+
+                        return { ...prevValues, properties: newProperties }
+                    })
+                }
+            })
         } else {
-            cb(res.response!);
-            toast.success(toastMessage)
+            if (operation === 'create') {
+                addVertexToStore(Vertex.fromResponse(res.response!));
+                toast.success('Successfully created Vertex');
+                setVertexFormValues(FormVertex.empty());
+            } else if (operation === 'update') {
+                updateVertexInStore(Vertex.fromResponse(res.response!));
+                toast.success('Successfully updated Vertex');
+            }
         }
     }
 
     // On Input Value Change Handlers
     const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setIsNameInvalid(false)
-        setNameErrorMessage("")
-        setGeneralErrorMessage("")
-
-        setVertexFormValues({ ...vertexFormValues, name: e.target.value})
+        setVertexFormValues({ ...vertexFormValues, name: e.target.value, nameErrorMessage: '' })
     }
 
     const handleAddProperty = () => {
-        setVertexFormValues((prevValues) => ({
-            ...prevValues,
-            properties: [...prevValues.properties, {id: uuidv4(), key: '', required: true, datatype: 'String', isInvalid: false, errorMessage: ""}],
-        }));
+        setVertexFormValues((prevValues: FormVertex) => {
+            return {
+                ...prevValues,
+                properties: [...prevValues.properties, FormProperty.empty()]
+            }
+        })
     };
 
     const handleDeleteProperty = (index: number) => {
-        setGeneralErrorMessage("");
-        setVertexFormValues((prevValues) => {
+        setVertexFormValues((prevValues: FormVertex) => {
             const newProperties = prevValues.properties.filter((_, i) => i !== index);
             return { ...prevValues, properties: newProperties };
         });
     }
 
-    const handlePropertyChange = (index: number, field: keyof Property, value: string | boolean) => {
-        setGeneralErrorMessage("");
-        setVertexFormValues((prevValues) => {
+    const handlePropertyChange = (index: number, field: keyof PropertyResponse, value: string | boolean) => {
+        setVertexFormValues((prevValues: FormVertex) => {
             const newProperties = [...prevValues.properties];
+
             let updatedProperty;
             if (field === 'datatype') {
-                updatedProperty = { ...newProperties[index], [field]: value === "" ? 'String' : value, isInvalid: false, errorMessage: "" };
+                updatedProperty = { ...newProperties[index], [field]: value === "" ? 'String' : value, errorMessage: "" } as FormProperty;
             } else {
-                updatedProperty = { ...newProperties[index], [field]: value, isInvalid: false, errorMessage: "" };
+                updatedProperty = { ...newProperties[index], [field]: value, errorMessage: "" } as FormProperty;
             }
+
             newProperties[index] = updatedProperty;
             return { ...prevValues, properties: newProperties };
         });
@@ -181,8 +165,8 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
                     label="Name"
                     variant="bordered"
                     value={vertexFormValues.name}
-                    isInvalid={isNameInvalid}
-                    errorMessage={nameErrorMessage}
+                    isInvalid={vertexFormValues.nameErrorMessage !== ''}
+                    errorMessage={vertexFormValues.nameErrorMessage}
                     onChange={handleNameChange}
                     className="bg-gray-100 dark:bg-gray-700 rounded-xl mt-5"
                 />
@@ -221,7 +205,7 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
                                     type="text"
                                     label="Key"
                                     variant="bordered"
-                                    isInvalid={property.isInvalid}
+                                    isInvalid={property.errorMessage !== ''}
                                     errorMessage={property.errorMessage}
                                     value={property.key}
                                     onChange={(e) => handlePropertyChange(index, 'key', e.target.value)}
@@ -254,20 +238,18 @@ export default function VertexForm({ projectId, graphCenter, selectedVertex, han
                     </AnimatePresence>
                 </div>
             </div>
-
-            <p className="text-red-500 mb-4 text-center">{generalErrorMessage}</p>
             
             <div className="flex w-full">
                 { selectedVertex ? 
                 <div className="w-full flex">
-                    <Button isLoading={isUpdateLoading} isDisabled={isDeleteLoading} color="warning" variant="ghost" onClick={handleUpdateVertexSubmit} className="flex-1 mr-2">
+                    <Button isDisabled={isLoading} color="warning" variant="ghost" onClick={handleUpdateVertexSubmit} className="flex-1 mr-2">
                         Update Vertex
                     </Button>
-                    <Button isLoading={isDeleteLoading} isDisabled={isUpdateLoading} color="danger" variant="ghost" onClick={handleDeleteVertexSubmit} className="flex-1">
+                    <Button isDisabled={isLoading} color="danger" variant="ghost" onClick={handleDeleteVertexSubmit} className="flex-1">
                         Delete Vertex
                     </Button>
                 </div> :
-                <Button isLoading={isCreateLoading} color="success" variant="ghost" onClick={handleCreateVertexSubmit} className="flex-1">
+                <Button isLoading={isLoading} color="success" variant="ghost" onClick={handleCreateVertexSubmit} className="flex-1">
                     Create Vertex
                 </Button> 
                 }

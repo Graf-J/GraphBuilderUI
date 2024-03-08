@@ -1,11 +1,13 @@
 import { useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
-import { CollectionReturnValue, Core, SingularElementReturnValue } from 'cytoscape';
-import { GraphResponse } from '@/models/response/graph-response-model';
-import { parseGraphToElements } from '@/utils/graph-parser';
+import { CollectionReturnValue, Core, ElementDefinition, SingularElementReturnValue } from 'cytoscape';
+import { Vertex } from '@/models/application/vertex';
+import { Edge } from '@/models/application/edge';
+import { Graph } from '@/models/application/graph';
+import { useGraphStore } from '@/store/graph-store';
 
 
-export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
+export default function MiniGraphBuilder({ graph }: { graph: Graph }) {
     const cyRef = useRef<Core | null>(null)
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -43,7 +45,7 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
                     'arrow-scale': 2,
                     'text-background-opacity': 0.85,
                     'curve-style': 'bezier',
-                    'control-point-step-size': 150,
+                    'control-point-step-size': 100,
                     'color': isDarkMode ? 'white' : 'black',
                     'text-background-color': isDarkMode ? '#111' : '#ddd',
                     'line-color': isDarkMode ? 'white' : 'black',
@@ -58,7 +60,6 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
 
     const layout = useMemo(() => ({
       name: 'preset',
-      fit: true,
     }), []);
 
     useEffect(() => {
@@ -75,6 +76,8 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
             cyRef.current.ready(() => {
                 applyStyles()
             });
+            cyRef.current.center();
+            cyRef.current.fit();
         }
 
         return () => {
@@ -83,7 +86,20 @@ export default function MiniGraphBuilder({ graph }: { graph: GraphResponse }) {
     }, [applyStyles, layout])
 
     const elements = useMemo(() => {
-        return parseGraphToElements(graph);
+        const graphElements: ElementDefinition[] = [];
+
+        graph!.vertices.forEach((vertex: Vertex) => {
+            graphElements.push({ 
+                data: { ...vertex }, 
+                position: { x: vertex.positionX, y: vertex.positionY}, 
+                style: { width: 70, height: 70 } 
+            });
+        })
+        graph!.edges.forEach((edge: Edge) => {
+            graphElements.push({ data: { ...edge } });
+        })
+
+        return graphElements;
     }, [graph]);
 
     return (
