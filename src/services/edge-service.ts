@@ -1,6 +1,5 @@
 import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
-import { PropertyResponse } from "@/models/response/property-response-model";
 import { EdgeResponse } from "@/models/response/edge-response-model";
 import { EdgeRequest } from "@/models/request/edge-request-model";
 

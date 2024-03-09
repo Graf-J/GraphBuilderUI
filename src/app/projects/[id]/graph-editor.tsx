@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
-import { CollectionReturnValue, Core, EventObject, SingularElementReturnValue, ElementDefinition, NodeDefinition } from 'cytoscape';
+import { CollectionReturnValue, Core, EventObject, SingularElementReturnValue, ElementDefinition } from 'cytoscape';
 import { updateVertex } from '@/services/vertex-service';
 import { useGraphStore } from '@/store/graph-store';
 import { Vertex } from '@/models/application/vertex';

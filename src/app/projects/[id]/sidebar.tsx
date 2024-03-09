@@ -1,4 +1,4 @@
-import { useState, useEffect, Key } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, Tab } from "@nextui-org/react";
 import VertexForm from "./vertex-form";
 import EdgeForm from "./edge-form";
