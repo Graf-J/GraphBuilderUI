@@ -93,14 +93,24 @@ export async function deleteProject(projectId: string, deleteOutput: boolean): P
                 'Content-Type': 'application/json'
             }
         })
+        const result = await response.json();
     
         if (!response.ok) {
-            return {
-                type: HttpResponseType.GENERAL_ERROR,
-                generalErrorMessage: 'Unknown Error',
-                fieldErrors: null,
-                response: null
-            } as HttpResponse<void>
+            if (response.status === 409) {
+                return {
+                    type: HttpResponseType.GENERAL_ERROR,
+                    generalErrorMessage: result.detail[0].msg,
+                    fieldErrors: null,
+                    response: null
+                } as HttpResponse<void>
+            } else {
+                return {
+                    type: HttpResponseType.GENERAL_ERROR,
+                    generalErrorMessage: 'Unknown Error',
+                    fieldErrors: null,
+                    response: null
+                } as HttpResponse<void>
+            }
         }
     
         return {
