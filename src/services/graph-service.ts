@@ -5,10 +5,11 @@ import { GraphResponse } from "@/models/response/graph-response-model"
 export async function getGraph(projectId: string): Promise<HttpResponse<GraphResponse>> {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/projects/${projectId}/graph`, {
+            cache: 'no-store',
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
         })
         const result = await response.json()
 
