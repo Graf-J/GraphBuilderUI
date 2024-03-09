@@ -4,7 +4,7 @@ import VertexForm from "./vertex-form";
 import EdgeForm from "./edge-form";
 import { useGraphStore } from "@/store/graph-store";
 
-export default function Sidebar({ projectId, graphCenter }: any) {
+export default function Sidebar({ projectId }: { projectId: string }) {
     const [tab, setTab] = useState<string>('vertex');
 
     const { selectedVertex, selectedEdge } = useGraphStore()
@@ -26,7 +26,7 @@ export default function Sidebar({ projectId, graphCenter }: any) {
         <div className="dark:dark flex w-full h-full flex-col">
           <Tabs aria-label="Options" selectedKey={ tab } onSelectionChange={(key) => setTab(key.toString())}>
             <Tab key="vertex" title="Vertex" className="flex flex-col items-center h-full">
-                <VertexForm projectId={projectId} graphCenter={graphCenter} />
+                <VertexForm projectId={projectId} />
             </Tab>
             <Tab key="edge" title="Edge" className="flex flex-col items-center h-full">
                 <EdgeForm projectId={projectId}  />

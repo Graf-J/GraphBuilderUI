@@ -16,12 +16,13 @@ import { FormProperty } from '@/models/form/property-form-model';
 import { VertexRequest } from '@/models/request/vertex-request-model';
 
 
-export default function VertexForm({ projectId, graphCenter }: any) {
+export default function VertexForm({ projectId }: { projectId: string }) {
     const [vertexFormValues, setVertexFormValues] = useState<FormVertex>(FormVertex.empty());
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const { 
+        graph,
         selectedVertex,
         resetSelectedVertex,
         addVertex: addVertexToStore, 
@@ -42,8 +43,8 @@ export default function VertexForm({ projectId, graphCenter }: any) {
     const handleCreateVertexSubmit = async () => {
         try {
             setIsLoading(true)
-            console.log(vertexFormValues);
-            const res = await addVertex(projectId, VertexRequest.fromFormWithPosition(vertexFormValues, graphCenter.x, graphCenter.y))
+            const { x, y } = calculateNewVertexPosition();
+            const res = await addVertex(projectId, VertexRequest.fromFormWithPosition(vertexFormValues, x, y))
             evaluateHttpResponse(res, 'create');
         } catch (error) {
             toast.error('Internal Server Error');
@@ -51,6 +52,29 @@ export default function VertexForm({ projectId, graphCenter }: any) {
             setIsLoading(false);
         }
     };
+
+    const calculateNewVertexPosition = (): { x: number, y: number }  => {
+        if (graph!.vertices.length === 0) {
+            // Place at this position if it is the first Vertex
+            return { x: 600, y: 400 }
+        } else if (graph!.vertices.length === 1) {
+            // Place it next to the first Vertex if it is the second Vertex
+            const existingVertex: Vertex = graph!.vertices[0]
+            return { x: existingVertex.positionX + 200, y: existingVertex.positionY }
+        } else {
+            // Place it in the center between all the existing Vertices
+            let sumX = 0;
+            let sumY = 0;
+            graph!.vertices.forEach((vertex: Vertex) => {
+                sumX += vertex.positionX;
+                sumY += vertex.positionY;
+            })
+            const centerX = Math.round(sumX / graph!.vertices.length);
+            const centerY = Math.round(sumY / graph!.vertices.length);
+
+            return { x: centerX, y: centerY };
+        }
+    }
 
     const handleUpdateVertexSubmit = async () => {
         try {
