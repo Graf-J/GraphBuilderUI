@@ -1,29 +1,29 @@
-import { useState } from "react";
-import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, useDisclosure} from "@nextui-org/react";
+import { ChangeEvent, useState } from "react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, useDisclosure } from "@nextui-org/react";
 import { CenterIcon } from "./center-icon";
 import { buildProject } from "@/services/build-service"
 import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import toast from "react-hot-toast";
 import { FieldError } from "@/models/http/field-error";
+import { BuildRequest } from "@/models/request/build-request-model";
+import { useGraphStore } from "@/store/graph-store";
+import { FormBuild } from "@/models/form/build-form-model";
 
 
-export default function Toolbar({ projectId, refreshGraph }: any) {
+export default function Toolbar({ projectId }: { projectId: string }) {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
 
     const [isBuildLoading, setIsBuildLoading] = useState<boolean>(false)
 
-    const [port, setPort] = useState(3000);
-    const [volume, setVolume] = useState<string>();
+    const [buildFormValues, setBuildFormValues] = useState<FormBuild>(FormBuild.empty());
 
-    const [portError, setPortError] = useState<string>('');
-    const [volumeError, setVolumeError] = useState<string>('');
+    const { graph, centerGraph } = useGraphStore()
 
     const onBuildClick = async (closeModal: () => void) => {
         try {
             setIsBuildLoading(true)
-
-            const res = await buildProject(projectId, port, volume)
+            const res = await buildProject(projectId, BuildRequest.fromForm(buildFormValues));
             evaluateHttpResponse(res, closeModal)
         } catch (error) {
             toast.error('Internal Server Error')
@@ -38,9 +38,9 @@ export default function Toolbar({ projectId, refreshGraph }: any) {
         } else if (res.type === HttpResponseType.FIELD_ERROR) {
             res.fieldErrors?.forEach((fieldError: FieldError) => {
                 if (fieldError.field === 'port') {
-                    setPortError(fieldError.message);
+                    setBuildFormValues((prevValues: FormBuild) => ({ ...prevValues, portErrorMessage: fieldError.message}))
                 } else if (fieldError.field === 'volume') {
-                    setVolumeError(fieldError.message);
+                    setBuildFormValues((prevValues: FormBuild) => ({ ...prevValues, volumeErrorMessage: fieldError.message}))
                 }
             })
         } else {
@@ -49,15 +49,23 @@ export default function Toolbar({ projectId, refreshGraph }: any) {
         }
     }
 
+    const onPortChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setBuildFormValues((prevValues: FormBuild) => ({ ...prevValues, port: Number(e.target.value), portErrorMessage: '' }))
+    }
+
+    const onVolumeChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setBuildFormValues((prevValues: FormBuild) => ({ ...prevValues, volume: e.target.value, volumeErrorMessage: '' }))
+    }
+
     return (
         <div className="bg-gray-300 dark:bg-gray-900 rounded-tr-lg p-2 flex justify-between items-center border-b-2 border-gray-800 dark:border-gray-300">
             <div>
-                <Button isIconOnly color="primary" className="p-2 ml-2 mt-1" size="md" onClick={() => refreshGraph()}>
+                <Button isIconOnly disabled={!graph} color="primary" className="p-2 ml-2 mt-1" size="md" onClick={() => centerGraph()}>
                     <CenterIcon />
                 </Button>    
             </div>
             <div>
-                <Button color="success" isLoading={isBuildLoading} onPress={onOpen}>Build</Button> 
+                <Button color="success" disabled={!graph} isLoading={isBuildLoading} onPress={onOpen}>Build</Button> 
                 <Modal 
                     isOpen={isOpen} 
                     onOpenChange={onOpenChange}
@@ -74,18 +82,18 @@ export default function Toolbar({ projectId, refreshGraph }: any) {
                                 autoFocus
                                 label="Port"
                                 type="number"
-                                defaultValue="3000"
+                                value={buildFormValues.port.toString()}
                                 variant="bordered"
-                                isInvalid={portError !== ''}
-                                errorMessage={portError}
-                                onChange={(e) => {setPort(Number(e.target.value)); setPortError('')}}
+                                isInvalid={buildFormValues.portErrorMessage !== ''}
+                                errorMessage={buildFormValues.portErrorMessage}
+                                onChange={onPortChange}
                             />
                             <Input
                                 label="Volume"
                                 variant="bordered"
-                                isInvalid={volumeError !== ''}
-                                errorMessage={volumeError}
-                                onChange={(e) => {setVolume(e.target.value); setVolumeError('')}}
+                                isInvalid={buildFormValues.volumeErrorMessage !== ''}
+                                errorMessage={buildFormValues.volumeErrorMessage}
+                                onChange={onVolumeChange}
                             />
                         </ModalBody>
                         <ModalFooter>

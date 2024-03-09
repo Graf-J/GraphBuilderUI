@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardBody, Button, Skeleton, useDisclosure } from "@nextui-org/react";
-import MiniGraphBuilder from './mini-graph-builder';
+import GraphView from './graph-view';
 import DeleteModal from '@/app/projects/delete-modal';
 import { ProjectResponse } from '@/models/response/project-response-model';
 import { getGraph } from '@/services/graph-service';
 import toast from 'react-hot-toast';
 import { HttpResponseType } from '@/models/http/http-response-type';
 import { GraphResponse } from '@/models/response/graph-response-model';
+import { Graph } from '@/models/application/graph';
 
 
 export default function ProjectCard({ project }: { project: ProjectResponse }) {
@@ -57,7 +58,7 @@ export default function ProjectCard({ project }: { project: ProjectResponse }) {
                                 <div className="h-24 rounded-lg bg-default-300"></div>
                             </Skeleton>
                             ) : (
-                                <MiniGraphBuilder graph={graph} />
+                                <GraphView graph={Graph.fromResponse(graph)} />
                             )
                         }
                     </CardBody>

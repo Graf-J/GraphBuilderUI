@@ -1,16 +1,30 @@
 import { useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
-import { CollectionReturnValue, Core, EventObject, SingularElementReturnValue } from 'cytoscape';
-import { GraphResponse } from '@/models/response/graph-response-model';
-import { parseGraphToElements } from '@/utils/graph-parser';
-import { VertexRequest } from '@/models/request/vertex-request-model';
-import { EdgeRequest } from '@/models/request/edge-request-model';
+import { CollectionReturnValue, Core, EventObject, SingularElementReturnValue, ElementDefinition } from 'cytoscape';
 import { updateVertex } from '@/services/vertex-service';
+import { useGraphStore } from '@/store/graph-store';
+import { Vertex } from '@/models/application/vertex';
+import { Edge } from '@/models/application/edge';
+import { FormVertex } from '@/models/form/vertex-form-model';
+import { FormEdge } from '@/models/form/edge-form-model';
 import { HttpResponseType } from '@/models/http/http-response-type';
+import { VertexRequest } from '@/models/request/vertex-request-model';
+import { Property } from '@/models/application/property';
+import { PropertyRequest } from '@/models/request/property-request-model';
 
 
-export default function GraphBuilder({ projectId, graph, eventHandlers, refresh }: { projectId: string, graph: GraphResponse, eventHandlers: any, refresh: number }) {
+export default function GraphEditor({ projectId }: { projectId: string }) {
     const cyRef = useRef<Core | null>(null)
+
+    const { 
+        graph,
+        centerGraphState,
+        updateVertex: updateVertexInStore,
+        setSelectedVertex, 
+        setSelectedEdge, 
+        resetSelectedVertex, 
+        resetSelectedEdge 
+    } = useGraphStore()
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
     
@@ -73,7 +87,7 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
                     'arrow-scale': 2,
                     'text-background-opacity': 0.85,
                     'curve-style': 'bezier',
-                    'control-point-step-size': 150,
+                    'control-point-step-size': 100,
                     'color': isDarkMode ? 'white' : 'black',
                     'text-background-color': isDarkMode ? 'black' : 'white',
                     'line-color': isDarkMode ? 'white' : 'black',
@@ -92,53 +106,43 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
     }), []);
 
     const handleNodeSelect = useCallback((event: EventObject) => {
-        const vertex: VertexRequest = {
-            id: event.target.data().id,
-            name: event.target.data().label,
-            properties: event.target.data().properties,
-            radius: event.target.data().radius,
-            position_x: Math.round(event.target.position().x),
-            position_y: Math.round(event.target.position().y),
-        };
-        
-        eventHandlers.onVertexSelect(vertex);
-    }, [eventHandlers]);
+        setSelectedVertex(FormVertex.fromVertex(event.target.data()));
+        resetSelectedEdge();
+    }, [resetSelectedEdge, setSelectedVertex]);
 
     const handleNodeUnselect = useCallback(() => {
-        eventHandlers.onElementUnselect();
-    }, [eventHandlers])
+        resetSelectedVertex();
+    }, [resetSelectedVertex])
     
     const handleEdgeSelect = useCallback((event: EventObject) => {
-        const edge = {
-            id: event.target.data().id,
-            name: event.target.data().label,
-            multi_edge: event.target.data().multiEdge,
-            properties: event.target.data().properties,
-            source_vertex_name: event.cy.getElementById(event.target.data().source)[0].data().label,
-            target_vertex_name: event.cy.getElementById(event.target.data().target)[0].data().label
-        };
-    
-        eventHandlers.onEdgeSelect(edge);
-    }, [eventHandlers])
+        const edge: Edge = event.target.data();
+        const sourceVertex = graph!.vertices.find((vertex: Vertex) => vertex.id === edge.source)
+        const targetVertex = graph!.vertices.find((vertex: Vertex) => vertex.id === edge.target)
+
+        setSelectedEdge(FormEdge.fromEdge(edge, sourceVertex!.label, targetVertex!.label));
+        resetSelectedVertex();
+    }, [graph, resetSelectedVertex, setSelectedEdge])
 
     const handleEdgeUnselect = useCallback(() => {
-        eventHandlers.onElementUnselect()
-    }, [eventHandlers])
+        resetSelectedEdge()
+    }, [resetSelectedEdge])
     
     const handleNodeRelease = useCallback(async (event: EventObject) => {
         const res = await updateVertex(
             projectId,
             event.target.data().id,
-            event.target.data().label,
-            event.target.data().radius,
-            event.target.data().properties,
-            Math.round(event.target.position().x),
-            Math.round(event.target.position().y)
+            new VertexRequest(
+                event.target.data().label,
+                Math.round(event.target.position().x),
+                Math.round(event.target.position().y),
+                event.target.data().properties.map((property: Property) => PropertyRequest.fromProperty(property))
+            )
         )
+
         if (res.type === HttpResponseType.SUCCESS) {
-            eventHandlers.handleUpdateVertex(res.response)
+            updateVertexInStore(Vertex.fromResponse(res.response!));
         }
-    }, [eventHandlers, projectId]);
+    }, [projectId, updateVertexInStore]);
 
     useEffect(() => {
         if (cyRef.current) {
@@ -176,16 +180,30 @@ export default function GraphBuilder({ projectId, graph, eventHandlers, refresh 
         }
     }, [applyStyles, handleEdgeSelect, handleEdgeUnselect, handleNodeRelease, handleNodeSelect, handleNodeUnselect, layout])
 
-    const elements = useMemo(() => {
-        return parseGraphToElements(graph);
-    }, [graph]);
+    useEffect(() => {
+        cyRef.current?.center();
+        cyRef.current?.fit();
+    }, [centerGraphState])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // const keyForCytoscape = useMemo(() => Math.random(), [elements]);
+    const elements = useMemo(() => {
+        const graphElements: ElementDefinition[] = [];
+
+        graph!.vertices.forEach((vertex: Vertex) => {
+            graphElements.push({ 
+                data: { ...vertex }, 
+                position: { x: vertex.positionX, y: vertex.positionY}, 
+                style: { width: 70, height: 70 } 
+            });
+        })
+        graph!.edges.forEach((edge: Edge) => {
+            graphElements.push({ data: { ...edge } });
+        })
+
+        return graphElements;
+    }, [graph]);
 
     return (
         <CytoscapeComponent
-            key={refresh}
             className="h-full w-full"
             wheelSensitivity={0.3}
             elements={elements}

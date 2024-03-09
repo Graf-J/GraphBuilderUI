@@ -1,3 +1,4 @@
+import { ProjectRequest } from "@/models/request/project-request-model";
 import { HttpResponse } from "@/models/http/http-response";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import { ProjectResponse } from "@/models/response/project-response-model";
@@ -33,14 +34,14 @@ export async function getProjects(): Promise<HttpResponse<ProjectResponse[]>> {
     }
 }
 
-export async function createProject(name: string): Promise<HttpResponse<ProjectResponse>> {
+export async function createProject(project: ProjectRequest): Promise<HttpResponse<ProjectResponse>> {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/v1/projects`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name })
+            body: JSON.stringify(project)
         })
         const result = await response.json();
 

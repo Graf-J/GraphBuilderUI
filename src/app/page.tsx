@@ -6,6 +6,7 @@ import { BackgroundBeams } from "@/components/ui/background-beams";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { Button } from '@nextui-org/button';
 
+
 export default function Home() {
   const description = "Introducing Graphify - A piece of software empowering users to craft projects in order to obtain access to a personalized and typesafe language to query data from graph databases via GraphQL"
 

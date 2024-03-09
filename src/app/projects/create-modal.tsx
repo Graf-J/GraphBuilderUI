@@ -4,32 +4,38 @@ import toast from "react-hot-toast";
 import { createProject } from "@/services/project-service";
 import { HttpResponseType } from "@/models/http/http-response-type";
 import { FieldError } from "@/models/http/field-error";
+import { useProjectStore } from "@/store/project-store";
+import { ProjectRequest } from "@/models/request/project-request-model";
+import { Project } from "@/models/application/project";
+import { FormProject } from "@/models/form/project-form-model";
 
 
 export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean, onOpenChange: (open: boolean) => void }) {
-    const [name, setName] = useState<string>('');
-    const [nameErrorMessage, setNameErrorMessage] = useState<string>('');
+    const [projectFormValues, setProjectFormValues] = useState<FormProject>(FormProject.empty())
+
+    const addProject = useProjectStore((state) => state.add);
 
     const handleNameChange = async (e: ChangeEvent<HTMLInputElement>) => {
-        setNameErrorMessage('');
-        setName(e.target.value);
+        setProjectFormValues({ name: e.target.value, nameErrorMessage: ''});
     }
     
     const onSubmit = async (onClose: () => void) => {
         try {
-            const response = await createProject(name);
+            const response = await createProject(ProjectRequest.fromForm(projectFormValues));
 
             if (response.type === HttpResponseType.FIELD_ERROR) {
                 response.fieldErrors?.forEach((fieldError: FieldError) => {
                     if (fieldError.field === 'name') {
-                        setNameErrorMessage(fieldError.message);
+                        setProjectFormValues((prevValues: FormProject) => {
+                          return { ...prevValues, nameErrorMessage: fieldError.message}
+                        });
                     }
                 })
             } else if (response.type === HttpResponseType.GENERAL_ERROR) {
                 toast.error(response.generalErrorMessage);
             } else {
                 toast.success('Successfully created Project');
-                // TODO: Update Global Store and add new Project from response.response
+                addProject(Project.fromResponse(response.response!));
                 onClose();
             }
         } catch {
@@ -50,9 +56,9 @@ export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean,
                         type="text"
                         label="Name"
                         variant="bordered"
-                        value={name}
-                        isInvalid={nameErrorMessage !== ''}
-                        errorMessage={nameErrorMessage}
+                        value={projectFormValues.name}
+                        isInvalid={projectFormValues.nameErrorMessage !== ''}
+                        errorMessage={projectFormValues.nameErrorMessage}
                         onChange={handleNameChange}
                         className="bg-gray-100 dark:bg-gray-700 rounded-xl mt-5"
                     />
