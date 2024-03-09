@@ -32,11 +32,13 @@ export default function Page({ params }: { params: { id: string } }) {
     }, [params.id, setGraph])
 
   return (
-    <div className="p-3 flex h-screen bg-gray-700 dark:bg-gray-500">
+    <div className="p-3 flex h-screen bg-gray-700 dark:bg-gray-500 overflow-hidden">
         <div className="bg-gray-200 dark:bg-gray-800 border-r-2 border-gray-700 dark:border-gray-300 flex rounded-tl-lg rounded-bl-lg" style={{ width: 500 }}>
             <div className="flex-1 p-2">
                 { graph ? 
-                    <Sidebar projectId={params.id} /> 
+                    <div className="h-full">
+                        <Sidebar projectId={params.id} /> 
+                    </div>
                 : 
                     <div className="h-full flex items-center justify-center">
                         <Spinner size="lg" />

@@ -1,7 +1,5 @@
 import { useState, useEffect, ChangeEvent } from 'react';
-import { Button, Input, Switch, Tooltip, Select, SelectItem, Checkbox } from "@nextui-org/react";
-import { AnimatePresence, motion } from 'framer-motion';
-import { DeleteIcon } from './delete-icon';
+import { Button, Input, Select, SelectItem, Checkbox } from "@nextui-org/react";
 import { PropertyResponse } from '@/models/response/property-response-model';
 import { addEdge, deleteEdge, updateEdge } from '@/services/edge-service';
 import { HttpResponse } from '@/models/http/http-response';
@@ -15,9 +13,10 @@ import { Vertex } from '@/models/application/vertex';
 import { FieldError } from '@/models/http/field-error';
 import { FormProperty } from '@/models/form/property-form-model';
 import { EdgeRequest } from '@/models/request/edge-request-model';
+import PropertyInputList from '@/components/property-input-list';
 
 
-export default function EdgeForm({ projectId }: any) {
+export default function EdgeForm({ projectId }: { projectId: string }) {
     const [edgeFormValues, setEdgeFormValues] = useState<FormEdge>(FormEdge.empty())
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -173,14 +172,14 @@ export default function EdgeForm({ projectId }: any) {
         })
     };
 
-    const handleDeleteProperty = (index: number) => {
+    const handleDeleteProperty = (index: number): void => {
         setEdgeFormValues((prevValues) => {
             const newProperties = prevValues.properties.filter((_, i) => i !== index);
             return { ...prevValues, properties: newProperties };
         });
     }
 
-    const handlePropertyChange = (index: number, field: keyof PropertyResponse, value: string | boolean) => {
+    const handlePropertyChange = (index: number, field: keyof PropertyResponse, value: string | boolean): void => {
         setEdgeFormValues((prevValues) => {
             const newProperties = [...prevValues.properties];
 
@@ -198,7 +197,7 @@ export default function EdgeForm({ projectId }: any) {
 
     return (
         <div className="flex flex-col w-full h-full">
-            <div className="flex flex-col w-full flex-1">
+            <div className="flex flex-col w-full h-full overflow-hidden">
                 <Input
                     isRequired
                     type="text"
@@ -262,59 +261,16 @@ export default function EdgeForm({ projectId }: any) {
                     </Button>
                 </div>
 
-                <div className="overflow-auto no-scrollbar" style={{ maxHeight: '40vh'}}>
-                    <AnimatePresence>
-                        {edgeFormValues.properties.map((property, index) => (
-                        <motion.div
-                            key={property.id}
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex items-center content-around w-full"
-                        >
-                            <div className="flex items-center content-around w-full">
-                                <Input
-                                    isRequired
-                                    size="md"
-                                    type="text"
-                                    label="Key"
-                                    variant="bordered"
-                                    isInvalid={property.errorMessage !== ''}
-                                    errorMessage={property.errorMessage}
-                                    value={property.key}
-                                    onChange={(e) => handlePropertyChange(index, 'key', e.target.value)}
-                                    className="bg-gray-100 dark:bg-gray-700 rounded-xl mt-2 mr-2 flex-1"
-                                />
-                                <Select 
-                                    isRequired
-                                    size="md"
-                                    className="dark:dark mt-2 flex-1 mr-2"
-                                    label="Datatype"
-                                    selectedKeys={[property.datatype]}
-                                    onChange={(e) => handlePropertyChange(index, 'datatype', e.target.value)}
-                                >
-                                    <SelectItem className="dark:dark text-black" key="String" value="String">String</SelectItem>
-                                    <SelectItem className="dark:dark text-black" key="Int" value="Int">Int</SelectItem>
-                                    <SelectItem className="dark:dark text-black" key="Float" value="Float">Float</SelectItem>
-                                    <SelectItem className="dark:dark text-black" key="Boolean" value="Boolean">Boolean</SelectItem>
-                                </Select>
-                                <Tooltip content={property.required ? 'Required' : 'Optional'} className="dark:dark">
-                                    <div className="mt-3">
-                                        <Switch defaultChecked className="dark" size='lg' isSelected={property.required} onChange={(event) => handlePropertyChange(index, 'required', event.target.checked)}/>
-                                    </div>
-                                </Tooltip>
-                                <Button isIconOnly color="danger" className="p-2 mt-2 mr-2" size="lg" onClick={() => handleDeleteProperty(index)}>
-                                    <DeleteIcon />
-                                </Button>   
-                            </div>
-                        </motion.div>
-                        ))}
-                    </AnimatePresence>
+                <div className="overflow-auto">
+                    <PropertyInputList 
+                        properties={edgeFormValues.properties}
+                        handlePropertyChange={handlePropertyChange}
+                        handleDeleteProperty={handleDeleteProperty}
+                    />
                 </div>
             </div>
                         
-            <div className="flex w-full">
+            <div className="flex w-full mb-7">
                 { selectedEdge ? 
                 <div className="w-full flex">
                     <Button isDisabled={isLoading} color="warning" variant="ghost" onClick={handleUpdateEdgeSubmit} className="flex-1 mr-2">
@@ -323,7 +279,8 @@ export default function EdgeForm({ projectId }: any) {
                     <Button isDisabled={isLoading} color="danger" variant="ghost" onClick={handleDeleteEdgeSubmit} className="flex-1">
                         Delete Edge
                     </Button>
-                </div> :
+                </div> 
+                :
                 <Button isLoading={isLoading} color="success" variant="ghost" onClick={handleCreateEdgeSubmit} className="flex-1">
                     Create Edge
                 </Button> 
