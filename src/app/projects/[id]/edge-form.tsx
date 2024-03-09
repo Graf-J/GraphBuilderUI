@@ -14,6 +14,7 @@ import { FormEdge } from '@/models/form/edge-form-model';
 import { Vertex } from '@/models/application/vertex';
 import { FieldError } from '@/models/http/field-error';
 import { FormProperty } from '@/models/form/property-form-model';
+import { EdgeRequest } from '@/models/request/edge-request-model';
 
 
 export default function EdgeForm({ projectId }: any) {
@@ -59,21 +60,10 @@ export default function EdgeForm({ projectId }: any) {
             }
             if (vertexError) return;
 
-            const res = await addEdge(
-                projectId,
-                edgeFormValues.name,
-                edgeFormValues.multiEdge,
-                edgeFormValues.properties.map(property => ({
-                    key: property.key,
-                    required: property.required,
-                    datatype: property.datatype
-                })),
-                sourceVertex!.id,
-                targetVertex!.id,
-            );
+            const res = await addEdge(projectId, EdgeRequest.fromForm(edgeFormValues, sourceVertex!.id, targetVertex!.id));
             evaluateHttpResponse(res, 'create');
         } catch (error) {
-            console.error(error);
+            toast.error('Internal Server Error');
         } finally {
             setIsLoading(false)
         }
@@ -96,22 +86,10 @@ export default function EdgeForm({ projectId }: any) {
             }
             if (vertexError) return;
 
-            const res = await updateEdge(
-                projectId,
-                selectedEdge!.id!,
-                edgeFormValues.name,
-                edgeFormValues.multiEdge,
-                edgeFormValues.properties.map(property => ({
-                    key: property.key,
-                    required: property.required,
-                    datatype: property.datatype
-                })),
-                sourceVertex!.id,
-                targetVertex!.id,
-            )
+            const res = await updateEdge(projectId, selectedEdge!.id!, EdgeRequest.fromForm(edgeFormValues, sourceVertex!.id, targetVertex!.id));
             evaluateHttpResponse(res, 'update');
         } catch (error) {
-            console.error(error)
+            toast.error('Internal Server Error');
         } finally {
             setIsLoading(false)
         }

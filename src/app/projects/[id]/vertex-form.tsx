@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useState } from 'react';
-import { Button, Input, Slider, Switch, Tooltip, Select, SelectItem } from "@nextui-org/react";
+import { Button, Input, Switch, Tooltip, Select, SelectItem } from "@nextui-org/react";
 import { motion, AnimatePresence } from 'framer-motion'
 import { PropertyResponse } from "@/models/response/property-response-model";
 import { DeleteIcon } from "./delete-icon";
@@ -13,6 +13,7 @@ import { Vertex } from '@/models/application/vertex';
 import { FormVertex } from '@/models/form/vertex-form-model';
 import { FieldError } from '@/models/http/field-error';
 import { FormProperty } from '@/models/form/property-form-model';
+import { VertexRequest } from '@/models/request/vertex-request-model';
 
 
 export default function VertexForm({ projectId, graphCenter }: any) {
@@ -39,51 +40,47 @@ export default function VertexForm({ projectId, graphCenter }: any) {
 
     // Button Click Handlers
     const handleCreateVertexSubmit = async () => {
-        setIsLoading(true)
-        
-        const res = await addVertex(
-            projectId, 
-            vertexFormValues.name, 
-            vertexFormValues.radius, 
-            vertexFormValues.properties.map(property => ({
-                key: property.key,
-                required: property.required,
-                datatype: property.datatype
-            })),
-            graphCenter.x,
-            graphCenter.y
-        )
-        evaluateHttpResponse(res, 'create');
-
-        setIsLoading(false);
+        try {
+            setIsLoading(true)
+            console.log(vertexFormValues);
+            const res = await addVertex(projectId, VertexRequest.fromFormWithPosition(vertexFormValues, graphCenter.x, graphCenter.y))
+            evaluateHttpResponse(res, 'create');
+        } catch (error) {
+            toast.error('Internal Server Error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleUpdateVertexSubmit = async () => {
-        setIsLoading(true)
-
-        const res = await updateVertex(
-            projectId,
-            selectedVertex!.id!,
-            vertexFormValues.name,
-            vertexFormValues.radius,
-            vertexFormValues.properties,
-            selectedVertex!.positionX,
-            selectedVertex!.positionY
-        )
-        evaluateHttpResponse(res, 'update');
-
-        setIsLoading(false)
+        try {
+            setIsLoading(true)
+            const res = await updateVertex(projectId, selectedVertex!.id!, VertexRequest.fromForm(vertexFormValues));
+            evaluateHttpResponse(res, 'update');
+        } catch (error) {
+            toast.error('Internal Server Error');
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const handleDeleteVertexSubmit = async () => {
-        setIsLoading(true)
-        
-        await deleteVertex(projectId, selectedVertex!.id!);
-        deleteVertexFromStore(selectedVertex!.id!)
-        resetSelectedVertex();
-        setIsLoading(false)
-
-        toast.success("Successfully deleted Vertex");
+        try {
+            setIsLoading(true)
+            const res = await deleteVertex(projectId, selectedVertex!.id!);
+            
+            if (res.type !== HttpResponseType.SUCCESS) {
+                toast.error(res.generalErrorMessage)
+            } else {
+                deleteVertexFromStore(selectedVertex!.id!)
+                toast.success("Successfully deleted Vertex");
+                resetSelectedVertex();
+            }
+        } catch (error) {
+            toast.error('Internal Server Error');
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const evaluateHttpResponse = (res: HttpResponse<VertexResponse>, operation: string) => {
@@ -170,16 +167,6 @@ export default function VertexForm({ projectId, graphCenter }: any) {
                     onChange={handleNameChange}
                     className="bg-gray-100 dark:bg-gray-700 rounded-xl mt-5"
                 />
-
-                <Slider 
-                    label="Radius" 
-                    step={1} 
-                    maxValue={100} 
-                    minValue={5} 
-                    value={vertexFormValues.radius}
-                    onChange={(value) => setVertexFormValues({ ...vertexFormValues, radius: value as number})}
-                    className="mt-5"
-                    />
 
                 <div className="inline-flex mt-5">
                     <Button color="secondary" variant="ghost" onClick={handleAddProperty}>

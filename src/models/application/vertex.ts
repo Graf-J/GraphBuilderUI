@@ -12,7 +12,6 @@ export class Vertex {
         public inEdges: Edge[],
         public positionX: number,
         public positionY: number,
-        public radius: number
     ) {}
 
     public static fromResponse(vertexResponse: VertexResponse): Vertex {
@@ -24,7 +23,6 @@ export class Vertex {
             vertexResponse.in_edges.map((edge: EdgeResponse) => Edge.fromResponse(edge)),
             vertexResponse.position_x,
             vertexResponse.position_y,
-            vertexResponse.radius
         )
     }
 }

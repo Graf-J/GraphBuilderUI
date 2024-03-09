@@ -9,5 +9,4 @@ export interface VertexResponse {
     in_edges: EdgeResponse[];
     position_x: number;
     position_y: number;
-    radius: number;
 }

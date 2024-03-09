@@ -8,6 +8,9 @@ import { Edge } from '@/models/application/edge';
 import { FormVertex } from '@/models/form/vertex-form-model';
 import { FormEdge } from '@/models/form/edge-form-model';
 import { HttpResponseType } from '@/models/http/http-response-type';
+import { VertexRequest } from '@/models/request/vertex-request-model';
+import { Property } from '@/models/application/property';
+import { PropertyRequest } from '@/models/request/property-request-model';
 
 
 export default function GraphBuilder({ projectId }: { projectId: string }) {
@@ -128,11 +131,12 @@ export default function GraphBuilder({ projectId }: { projectId: string }) {
         const res = await updateVertex(
             projectId,
             event.target.data().id,
-            event.target.data().label,
-            event.target.data().radius,
-            event.target.data().properties,
-            Math.round(event.target.position().x),
-            Math.round(event.target.position().y)
+            new VertexRequest(
+                event.target.data().label,
+                Math.round(event.target.position().x),
+                Math.round(event.target.position().y),
+                event.target.data().properties.map((property: Property) => PropertyRequest.fromProperty(property))
+            )
         )
 
         if (res.type === HttpResponseType.SUCCESS) {
