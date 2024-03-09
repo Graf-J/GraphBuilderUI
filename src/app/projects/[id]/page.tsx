@@ -1,7 +1,7 @@
 "use client"
 import { useEffect } from 'react';
 import { Spinner, Skeleton } from '@nextui-org/react';
-import GraphBuilder from '@/components/custom/graph-builder';
+import GraphEditor from '@/app/projects/[id]/graph-editor';
 import Sidebar from './sidebar';
 import Toolbar from './toolbar';
 import { getGraph } from '@/services/graph-service';
@@ -50,7 +50,7 @@ export default function Page({ params }: { params: { id: string } }) {
             <Toolbar projectId={params.id} />
             <div className="shadow-lg h-full w-full dark:bg-black bg-white dark:bg-dot-white/[0.2] bg-dot-black/[0.2] relative flex items-center justify-center rounded-br-lg">
                 { graph ? 
-                    <GraphBuilder projectId={params.id} /> 
+                    <GraphEditor projectId={params.id} /> 
                 :
                     <Skeleton className="dark:dark rounded-lg h-full w-full" />
                 }

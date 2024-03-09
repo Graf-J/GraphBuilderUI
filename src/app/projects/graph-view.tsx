@@ -4,10 +4,9 @@ import { CollectionReturnValue, Core, ElementDefinition, SingularElementReturnVa
 import { Vertex } from '@/models/application/vertex';
 import { Edge } from '@/models/application/edge';
 import { Graph } from '@/models/application/graph';
-import { useGraphStore } from '@/store/graph-store';
 
 
-export default function MiniGraphBuilder({ graph }: { graph: Graph }) {
+export default function GraphView({ graph }: { graph: Graph }) {
     const cyRef = useRef<Core | null>(null)
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(true);

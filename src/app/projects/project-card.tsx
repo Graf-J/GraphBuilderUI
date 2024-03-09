@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardBody, Button, Skeleton, useDisclosure } from "@nextui-org/react";
-import MiniGraphBuilder from './mini-graph-builder';
+import GraphView from './graph-view';
 import DeleteModal from '@/app/projects/delete-modal';
 import { ProjectResponse } from '@/models/response/project-response-model';
 import { getGraph } from '@/services/graph-service';
@@ -58,7 +58,7 @@ export default function ProjectCard({ project }: { project: ProjectResponse }) {
                                 <div className="h-24 rounded-lg bg-default-300"></div>
                             </Skeleton>
                             ) : (
-                                <MiniGraphBuilder graph={Graph.fromResponse(graph)} />
+                                <GraphView graph={Graph.fromResponse(graph)} />
                             )
                         }
                     </CardBody>

@@ -1,7 +1,7 @@
 "use client"
 import { useEffect } from 'react';
 import { Button, useDisclosure, Spinner } from "@nextui-org/react";
-import ProjectCard from '@/components/custom/project-card';
+import ProjectCard from '@/app/projects/project-card';
 import { HttpResponseType } from '@/models/http/http-response-type';
 import { ProjectResponse } from '@/models/response/project-response-model';
 import { getProjects } from '@/services/project-service';

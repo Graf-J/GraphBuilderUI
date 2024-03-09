@@ -13,7 +13,7 @@ import { Property } from '@/models/application/property';
 import { PropertyRequest } from '@/models/request/property-request-model';
 
 
-export default function GraphBuilder({ projectId }: { projectId: string }) {
+export default function GraphEditor({ projectId }: { projectId: string }) {
     const cyRef = useRef<Core | null>(null)
 
     const { 

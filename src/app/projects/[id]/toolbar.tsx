@@ -18,7 +18,7 @@ export default function Toolbar({ projectId }: { projectId: string }) {
 
     const [buildFormValues, setBuildFormValues] = useState<FormBuild>(FormBuild.empty());
 
-    const { centerGraph } = useGraphStore()
+    const { graph, centerGraph } = useGraphStore()
 
     const onBuildClick = async (closeModal: () => void) => {
         try {
@@ -60,12 +60,12 @@ export default function Toolbar({ projectId }: { projectId: string }) {
     return (
         <div className="bg-gray-300 dark:bg-gray-900 rounded-tr-lg p-2 flex justify-between items-center border-b-2 border-gray-800 dark:border-gray-300">
             <div>
-                <Button isIconOnly color="primary" className="p-2 ml-2 mt-1" size="md" onClick={() => centerGraph()}>
+                <Button isIconOnly disabled={!graph} color="primary" className="p-2 ml-2 mt-1" size="md" onClick={() => centerGraph()}>
                     <CenterIcon />
                 </Button>    
             </div>
             <div>
-                <Button color="success" isLoading={isBuildLoading} onPress={onOpen}>Build</Button> 
+                <Button color="success" disabled={!graph} isLoading={isBuildLoading} onPress={onOpen}>Build</Button> 
                 <Modal 
                     isOpen={isOpen} 
                     onOpenChange={onOpenChange}
