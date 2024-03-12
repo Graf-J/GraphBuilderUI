@@ -261,7 +261,7 @@ export default function EdgeForm({ projectId }: { projectId: string }) {
                     </Button>
                 </div>
 
-                <div className="overflow-auto">
+                <div className="overflow-auto h-[calc(100vh-480px)]">
                     <PropertyInputList 
                         properties={edgeFormValues.properties}
                         handlePropertyChange={handlePropertyChange}
@@ -270,7 +270,7 @@ export default function EdgeForm({ projectId }: { projectId: string }) {
                 </div>
             </div>
                         
-            <div className="flex w-full mb-7">
+            <div className="fixed bottom-6 left-5 flex w-full" style={{ width: 480 }}>
                 { selectedEdge ? 
                 <div className="w-full flex">
                     <Button isDisabled={isLoading} color="warning" variant="ghost" onClick={handleUpdateEdgeSubmit} className="flex-1 mr-2">
