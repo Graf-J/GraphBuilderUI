@@ -36,6 +36,7 @@ export default function CreateModal({ isOpen, onOpenChange }: { isOpen: boolean,
             } else {
                 toast.success('Successfully created Project');
                 addProject(Project.fromResponse(response.response!));
+                setProjectFormValues({ name: '', nameErrorMessage: '' });
                 onClose();
             }
         } catch {
